@@ -9,6 +9,7 @@
 <title>MANIK ELECTRIC &amp; ELECTRONICS SERVICE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{--bg:#f3f5f8;--card:#fff;--ink:#101114;--mute:#6b7280;--line:#e3e7ee;--blue:#1769e0;--good:#14804a;--bad:#c62828;--warn:#b45309}
@@ -160,9 +161,9 @@ async function dash(){
    <div class="card wide"><small>দোকানের বর্তমান নগদ ক্যাশ</small><strong>${money(bal)}</strong></div>
   </div>
   ${low.length?`<h2>⚠️ স্টক কমে গেছে</h2>`+low.map(p=>`<div class="card row" style="margin-bottom:8px"><span>${esc(p.name)}</span><span class="warn">${qty(p.current_stock)} ${esc(p.base_unit)} (সর্বনিম্ন ${qty(p.min_stock)})</span></div>`).join(''):''}
-  <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>${own?'<button class="btn ghost" id="bk">⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)</button><p class="note">ব্যাকআপে সব হিসাব থাকে, ছবির ফাইল থাকে না। সপ্তাহে অন্তত একবার ডাউনলোড করে iCloud বা Files-এ রাখুন।</p>':''}`;
+  <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>${own?'<button class="btn ghost" id="bk">⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)</button><p class="note">ব্যাকআপে সব হিসাব ও সব ছবি থাকে (ছবি আলাদা ZIP ফাইলে)। সপ্তাহে অন্তত একবার ডাউনলোড করে iCloud বা Files-এ রাখুন।</p><h2 class="bad">⚠️ ঝুঁকিপূর্ণ কাজ (শুধু Owner)</h2><button class="btn ghost" id="rz" style="color:var(--bad)">টেস্ট ডেটা মুছে সব শূন্য করুন</button>':''}`;
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{period=b.dataset.p;refresh()});
-  if(own)$('#bk').onclick=backup;
+  if(own){$('#bk').onclick=backup;$('#rz').onclick=resetAll}
   if(bdue){$('#bk2').onclick=backup;if(!window._bkShown){window._bkShown=1;popup(`<h2 class="bad">⚠️ ব্যাকআপ নেওয়ার সময় হয়েছে!</h2><p>${bmsg}<br>প্রতি ${qty(BACKUP_DAYS)} দিনে একবার ব্যাকআপ নিন, নইলে ডেটা হারালে ফেরত পাওয়া কঠিন হবে।</p><button class="btn" id="bk3" style="margin-bottom:10px">⬇ এখনই ব্যাকআপ নিন</button>`);$('#bk3').onclick=e=>{e.target.closest('.sheet').remove();backup({currentTarget:$('#bk')})}}}
 }
 
@@ -210,8 +211,8 @@ async function prodForm(p){
 /* ---------- PHOTOS (memo / receipt) ---------- */
 const fd=t=>new Date(t).toLocaleString('bn-BD',{timeZone:'Asia/Dhaka',dateStyle:'short',timeStyle:'short'});
 const shrink=async f=>{if(!f.type.startsWith('image/'))throw new Error('শুধু ছবি দেওয়া যাবে');if(f.size>20e6)throw new Error('ছবি খুব বড় (২০ MB-এর বেশি)');
-  const b=await createImageBitmap(f),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);
-  return new Promise((ok,no)=>c.toBlob(x=>x?ok(x):no(new Error('ছবি প্রস্তুত করা যায়নি')),'image/jpeg',.8))};
+  const b=await createImageBitmap(f),k=Math.min(1,1280/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);
+  return new Promise((ok,no)=>c.toBlob(x=>x?ok(x):no(new Error('ছবি প্রস্তুত করা যায়নি')),'image/jpeg',.72))};
 async function upload(type,id,files){let ok=0;for(const f of files){try{const blob=await shrink(f),path=`${type}/${id}/${crypto.randomUUID()}.jpg`;
   const u=await sb.storage.from('shop-files').upload(path,blob,{contentType:'image/jpeg'});if(u.error)throw u.error;
   const a=await sb.from('attachments').insert({owner_type:type,owner_id:id,kind:'memo',storage_path:path,created_by:me.id});if(a.error)throw a.error;ok++}catch(e){toast('ছবি যায়নি: '+(e.message||e),1)}}return ok}
@@ -225,14 +226,37 @@ async function viewer(type,id){
     $('#vu').onclick=async()=>{const f=[...$('#vf').files].slice(0,15-n);if(!f.length)return toast('ছবি বেছে নিন (সর্বোচ্চ ১৫টি)',1);$('#vu').disabled=true;await upload(type,id,f);draw()}};
   draw()}
 
+/* ---------- RESET ALL DATA (Owner, irreversible) ---------- */
+async function resetAll(){
+  if(!confirm('⚠️ সব বিক্রি, ক্রয়, পেমেন্ট, ক্যাশ ও মেমোর ছবি চিরতরে মুছে যাবে এবং ড্যাশবোর্ড শূন্য হয়ে যাবে। এটি আর ফেরানো যাবে না।\n\nগত ২৪ ঘণ্টার মধ্যে ব্যাকআপ নেওয়া থাকতে হবে। এগিয়ে যাবেন?'))return;
+  const master=confirm('পণ্য, কাস্টমার ও Supplier-এর তালিকাও কি মুছবেন?\n\nOK = সবকিছু মুছুন (একদম ফাঁকা)\nCancel = তালিকা থাকুক, শুধু স্টক ও হিসাব শূন্য হবে');
+  if(prompt('নিশ্চিত করতে ইংরেজিতে লিখুন: RESET')!=='RESET')return toast('বাতিল করা হয়েছে',1);
+  const r=await sb.rpc('reset_all_data',{p_confirm:'RESET',p_include_master:master});
+  if(r.error)return toast(r.error.message,1);
+  const paths=r.data||[];for(let i=0;i<paths.length;i+=100)await sb.storage.from('shop-files').remove(paths.slice(i,i+100));
+  toast('সব হিসাব শূন্য করা হয়েছে');refresh()}
+
 /* ---------- BACKUP (Owner) ---------- */
-async function backup(ev){const b=ev?.currentTarget||$('#bk');b.disabled=true;b.textContent='ব্যাকআপ তৈরি হচ্ছে...';
-  try{const T=['shop_settings','categories','units','products','product_unit_conversions','stock_movements','suppliers','customers','purchases','purchase_items','sales','sale_items','payments','cash_transactions','daily_closings','activity_logs','attachments','opening_stock_batches','profiles'],out={};
+async function backup(ev){
+  const b=ev?.currentTarget||$('#bk'),lab='⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)',set=t=>{b.textContent=t};b.disabled=true;set('ব্যাকআপ তৈরি হচ্ছে...');
+  try{
+    const T=['shop_settings','categories','units','products','product_unit_conversions','stock_movements','suppliers','customers','purchases','purchase_items','sales','sale_items','payments','cash_transactions','daily_closings','activity_logs','attachments','opening_stock_batches','profiles'],out={};
     for(const t of T)out[t]=await all(()=>sb.from(t).select('*'));
-    const name='manik-backup-'+new Date(Date.now()+6*36e5).toISOString().slice(0,10)+'.json',url=URL.createObjectURL(new Blob([JSON.stringify({app:'manik-shop',exported_at:new Date().toISOString(),tables:out},null,1)],{type:'application/json'}));
-    popup(`<h2>✅ ব্যাকআপ প্রস্তুত</h2><p>নিচের বাটনে চেপে ফাইলটি Files অ্যাপে সংরক্ষণ করুন।</p><a class="btn" style="display:block;text-decoration:none;margin-bottom:10px" href="${url}" download="${name}" id="bkl">⬇ ফাইল সংরক্ষণ করুন</a>`);
+    const day=new Date(Date.now()+6*36e5).toISOString().slice(0,10),links=[],total=out.attachments.length;let fail=0,note='';
+    links.push(`<a class="btn" id="bkl" style="display:block;text-decoration:none;margin-bottom:10px" href="${URL.createObjectURL(new Blob([JSON.stringify({app:'manik-shop',exported_at:new Date().toISOString(),tables:out},null,1)],{type:'application/json'}))}" download="manik-backup-${day}.json">⬇ ১) হিসাবের ফাইল সংরক্ষণ করুন</a>`);
+    if(total&&!window.JSZip)note='<p class="bad">ছবির ব্যাকআপ চালু করা যায়নি (ইন্টারনেট সমস্যা)। পাতা রিফ্রেশ করে আবার চেষ্টা করুন।</p>';
+    else if(total){
+      let zip=new JSZip(),size=0,part=0,n=0;
+      const flush=async()=>{if(!n)return;part++;const blob=await zip.generateAsync({type:'blob',compression:'STORE'});
+        links.push(`<a class="btn" style="display:block;text-decoration:none;margin-bottom:10px" href="${URL.createObjectURL(blob)}" download="manik-photos-${day}-${part}.zip">⬇ ${qty(part+1)}) ছবির ফাইল ${qty(part)} (${qty(n)}টি ছবি)</a>`);zip=new JSZip();size=0;n=0};
+      for(let i=0;i<total;i++){set(`ছবি নামছে ${qty(i+1)}/${qty(total)}...`);
+        try{const p=out.attachments[i].storage_path,r=await sb.storage.from('shop-files').download(p);if(r.error)throw r.error;zip.file(p,r.data);size+=r.data.size;n++;if(size>25e6)await flush()}catch(e){fail++}}
+      await flush();
+    }
+    popup(`<h2>✅ ব্যাকআপ প্রস্তুত</h2><p>নিচের <b>প্রতিটি</b> বাটনে চেপে ফাইল Files অ্যাপে সংরক্ষণ করুন। এই পাতা বন্ধ করার আগে সবগুলো রাখুন।</p>${links.join('')}${fail?`<p class="bad">${qty(fail)}টি ছবি নামানো যায়নি। আবার ব্যাকআপ নিন।</p>`:''}${note}${total?'':'<p class="note">এখনো কোনো ছবি যোগ করা হয়নি।</p>'}`);
     $('#bkl').onclick=()=>{sb.from('shop_settings').update({last_backup_at:new Date().toISOString()}).eq('id',1).then(()=>{})};
-  }catch(e){toast('ব্যাকআপ হয়নি: '+(e.message||e),1);b.disabled=false;b.textContent='⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)'}}
+  }catch(e){toast('ব্যাকআপ হয়নি: '+(e.message||e),1)}finally{b.disabled=false;set(lab)}
+}
 
 /* ---------- PURCHASE (kind 'buy') AND SALE (kind 'sale') ---------- */
 function popup(html){const s=document.createElement('div');s.className='sheet';s.innerHTML=`<div style="text-align:center">${html}<button class="btn" id="ok">ঠিক আছে</button></div>`;document.body.appendChild(s);$('#ok').onclick=()=>{s.remove();refresh()}}
