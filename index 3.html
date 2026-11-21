@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MANIK">
+<meta name="theme-color" content="#101114">
+<title>MANIK ELECTRIC &amp; ELECTRONICS SERVICE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--ink:#101114;--mute:#6b7280;--line:#e3e7ee;--blue:#1769e0;--good:#14804a;--bad:#c62828;--warn:#b45309}
+:root[data-theme=dark]{--bg:#0e0f12;--card:#17191e;--ink:#f1f3f6;--mute:#9aa3b2;--line:#262a32;--blue:#4b8ef5;--good:#3ecf8e;--bad:#ff6b6b;--warn:#f5a524}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans Bengali',system-ui,sans-serif;font-size:16px;line-height:1.5}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#101114;color:#fff}
+.top b{flex:1;font-size:14px;line-height:1.2}
+.ib{background:#ffffff1a;border:0;color:#fff;width:40px;height:40px;border-radius:12px;font-size:18px}
+.banner{margin:12px 14px;border-radius:18px;padding:22px 18px;color:#fff;background:linear-gradient(135deg,#101114 0%,#0b2a5b 60%,#1769e0 100%);position:relative;overflow:hidden}
+.banner svg.c{position:absolute;right:-10px;top:0;height:100%;opacity:.25}
+.banner h1{margin:8px 0 2px;font-size:17px;line-height:1.3;position:relative}
+.banner p{margin:0;font-size:12px;opacity:.85;position:relative}
+main{padding:0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.card small{color:var(--mute);display:block;font-size:12px}
+.card strong{font-size:20px;display:block;margin-top:2px}
+.card.wide{grid-column:1/-1}
+.card.hero strong{font-size:28px;color:var(--blue)}
+.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+h2{font-size:16px;margin:18px 2px 8px}
+.note{color:var(--mute);font-size:13px;margin:12px 2px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;padding:10px 0 8px;font-size:12px;color:var(--mute)}
+nav button span{display:block;font-size:20px}
+nav button.on{color:var(--blue);font-weight:700}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:700;width:100%}
+.btn:disabled{opacity:.55}
+.btn.sm{width:auto;padding:8px 14px}
+.btn.ghost{background:none;color:var(--mute);border:1px solid var(--line)}
+input,select,textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin:4px 0 12px}
+label{font-size:13px;color:var(--mute)}
+.login{max-width:420px;margin:0 auto;padding:28px 18px}
+.login .logo{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;margin-bottom:22px}
+.err{background:#c6282820;color:var(--bad);padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.pill{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--line)}
+.sheet{position:fixed;inset:0;background:#0009;display:flex;align-items:flex-end;z-index:20}
+.sheet>div{background:var(--bg);width:100%;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.toast{position:fixed;left:14px;right:14px;top:calc(12px + env(safe-area-inset-top,0px));background:#101114;color:#fff;padding:12px 14px;border-radius:12px;z-index:30;font-size:14px;border-left:4px solid var(--blue)}
+.toast.e{border-color:var(--bad)}
+.spin{display:block;width:30px;height:30px;margin:40px auto;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:r .8s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+#ptr{position:fixed;top:calc(env(safe-area-inset-top,0px) - 50px);left:50%;margin-left:-18px;width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;z-index:15;transition:transform .15s}
+[hidden]{display:none!important}
+@media(min-width:760px){body{max-width:760px;margin:0 auto}}
+@media(prefers-reduced-motion:reduce){.spin{animation-duration:2s}}
+</style>
+</head>
+<body>
+<div id="ptr"><i class="spin" style="margin:0;width:18px;height:18px"></i></div>
+<div id="app"></div>
+<script>
+const sb=supabase.createClient('https://xejpvkhjjapqytxbnwnp.supabase.co','sb_publishable_qhyMBqYT_iwIvjDPEmCCRg_g0gZh-1n');
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>'৳'+Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:2});
+const qty=n=>Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:3});
+const sum=(a,f)=>a.reduce((s,x)=>s+Number(f(x)||0),0);
+let me=null,tab='dash',busy=false;
+
+const LOGO='<svg width="56" height="56" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#101114" stroke="#1769e0" stroke-width="2"/><path d="M27 8 14 27h8l-3 13 15-21h-9z" fill="#1769e0"/></svg>';
+const CIRCUIT='<svg class="c" viewBox="0 0 200 100" fill="none" stroke="#fff" stroke-width="1.5"><path d="M0 20h60l10 10h50M0 50h40l15 15h70l10-10h40M0 80h90l10-10h100"/><circle cx="120" cy="30" r="4"/><circle cx="125" cy="65" r="4"/><circle cx="100" cy="70" r="4"/></svg>';
+
+// Bangladesh day start (UTC+6, no DST) as ISO
+function dayStart(){const off=6*36e5,d=new Date(Date.now()+off);return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-off).toISOString()}
+// read all rows (Supabase returns max 1000 per request)
+async function all(mk){let out=[],from=0;for(;;){const{data,error}=await mk().range(from,from+999);if(error)throw error;out=out.concat(data);if(data.length<1000)return out;from+=1000}}
+
+function toast(m,e){const t=document.createElement('div');t.className='toast'+(e?' e':'');t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3200)}
+function theme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('theme',t)}catch(e){}}
+try{theme(localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))}catch(e){}
+
+/* ---------- LOGIN ---------- */
+function loginView(msg){
+  $('#app').innerHTML=`<div class="login"><div class="logo">${LOGO}<b>MANIK ELECTRIC &amp; ELECTRONICS SERVICE</b><small style="color:var(--mute)">ELECTRICAL &amp; ELECTRONICS SALES AND REPAIR</small></div>
+  ${msg?`<div class="err">${esc(msg)}</div>`:''}
+  <label>ইমেইল</label><input id="em" type="email" autocomplete="username" inputmode="email">
+  <label>পাসওয়ার্ড</label><input id="pw" type="password" autocomplete="current-password">
+  <button class="btn" id="go">লগইন করুন</button></div>`;
+  $('#go').onclick=async()=>{
+    if(busy)return;busy=true;const b=$('#go');b.disabled=true;b.textContent='অপেক্ষা করুন...';
+    const{data,error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
+    busy=false;
+    if(error)return loginView('লগইন হয়নি: ইমেইল বা পাসওয়ার্ড ঠিক নেই।');
+    afterLogin(data.user);
+  };
+}
+async function afterLogin(user){
+  const{data:p,error}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  if(error||!p||!p.is_active){await sb.auth.signOut();return loginView('আপনার অ্যাকাউন্ট এখনো চালু করা হয়নি। Owner-এর সাথে যোগাযোগ করুন।')}
+  me=p;shell();go('dash');
+}
+
+/* ---------- SHELL ---------- */
+function shell(){
+  $('#app').innerHTML=`<div class="top"><b>MANIK ELECTRIC &amp; ELECTRONICS</b>
+  <button class="ib" id="rf" title="রিফ্রেশ">⟳</button><button class="ib" id="th" title="Dark/Light">◐</button><button class="ib" id="lo" title="লগআউট">⏻</button></div>
+  <div class="banner">${CIRCUIT}${LOGO.replace('width="56" height="56"','width="44" height="44"')}<h1>MANIK ELECTRIC &amp; ELECTRONICS SERVICE</h1><p>Electrical &amp; Electronics Sales and Repair</p></div>
+  <main id="view"></main>
+  <nav><button data-t="dash"><span>▦</span>ড্যাশবোর্ড</button><button data-t="inv"><span>▤</span>পণ্য</button><button data-t="buy"><span>⬇</span>ক্রয়</button><button data-t="sales"><span>৳</span>বিক্রি</button><button data-t="svc"><span>✚</span>সার্ভিস</button></nav>`;
+  $('#rf').onclick=refresh;
+  $('#th').onclick=()=>theme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+  $('#lo').onclick=async()=>{await sb.auth.signOut();me=null;loginView()};
+  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
+}
+function go(t){tab=t;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));refresh()}
+async function refresh(){
+  const v=$('#view');v.innerHTML='<i class="spin"></i>';
+  try{
+    if(tab==='dash')await dash();else if(tab==='inv')await inv();else if(tab==='buy')await txn('buy');else if(tab==='sales')await txn('sale');
+    else v.innerHTML='<p class="note">এই অংশ পরের ধাপে তৈরি হবে। এখনো এটি চালু নয়।</p>';
+  }catch(e){v.innerHTML=`<div class="err">তথ্য আনা যায়নি: ${esc(e.message||e)}</div>`}
+}
+
+/* ---------- DASHBOARD (all numbers come from the database) ---------- */
+async function dash(){
+  const st=dayStart(),own=me.role==='owner';
+  const[today,dues,pdues,prods,cash]=await Promise.all([
+    all(()=>sb.from('sales').select('total,paid,due,cost_total').eq('status','active').gte('sale_date',st)),
+    all(()=>sb.from('sales').select('due').eq('status','active').gt('due',0)),
+    all(()=>sb.from('purchases').select('due').eq('status','active').gt('due',0)),
+    all(()=>sb.from('products').select('id,name,current_stock,min_stock,base_unit').eq('is_active',true)),
+    all(()=>sb.from('cash_transactions').select('direction,amount').eq('status','active').eq('method','cash'))
+  ]);
+  const total=sum(today,s=>s.total),profit=sum(today,s=>s.total-s.cost_total);
+  const bal=sum(cash.filter(c=>c.direction==='in'),c=>c.amount)-sum(cash.filter(c=>c.direction==='out'),c=>c.amount);
+  const low=prods.filter(p=>Number(p.min_stock)>0&&Number(p.current_stock)<=Number(p.min_stock));
+  const card=(l,v,c='')=>`<div class="card"><small>${l}</small><strong class="${c}">${v}</strong></div>`;
+  $('#view').innerHTML=`<div class="grid">
+   <div class="card wide hero"><small>আজকের মোট বিক্রি</small><strong>${money(total)}</strong></div>
+   ${card('আজকের আনুমানিক লাভ',money(profit),profit<0?'bad':'good')}
+   ${card('আজকের বিক্রির সংখ্যা',qty(today.length))}
+   ${card('আজকের নগদ পাওয়া',money(sum(today,s=>s.paid)))}
+   ${card('আজকের বাকি বিক্রি',money(sum(today,s=>s.due)),'warn')}
+   ${card('মোট বাকি পাওনা',money(sum(dues,s=>s.due)))}
+   ${card('মোট বাকি দেনা',money(sum(pdues,s=>s.due)))}
+   ${card('মোট পণ্য',qty(prods.length))}
+   ${card('স্টকে আছে',qty(prods.filter(p=>Number(p.current_stock)>0).length))}
+   <div class="card wide"><small>দোকানের বর্তমান নগদ ক্যাশ</small><strong>${money(bal)}</strong></div>
+  </div>
+  ${low.length?`<h2>⚠️ স্টক কমে গেছে</h2>`+low.map(p=>`<div class="card row" style="margin-bottom:8px"><span>${esc(p.name)}</span><span class="warn">${qty(p.current_stock)} ${esc(p.base_unit)} (সর্বনিম্ন ${qty(p.min_stock)})</span></div>`).join(''):''}
+  <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>`;
+}
+
+/* ---------- INVENTORY ---------- */
+async function inv(){
+  const prods=await all(()=>sb.from('products').select('*').eq('is_active',true).order('name'));
+  const own=true; // staff may add/edit/delete products
+  $('#view').innerHTML=`<div class="row" style="margin-bottom:10px"><input id="q" placeholder="পণ্য খুঁজুন (নাম, ব্র্যান্ড, কোড)" style="margin:0">${own?'<button class="btn sm" id="add">+ নতুন</button>':''}</div>${own?'<p class="note" style="margin:0 0 8px">পণ্যে চাপলে সম্পাদনা বা মুছে ফেলা যাবে।</p>':''}<div id="pl"></div>`;
+  const draw=()=>{const k=$('#q').value.trim().toLowerCase();
+    const f=prods.filter(p=>[p.name,p.brand,p.code,p.model_no].join(' ').toLowerCase().includes(k));
+    $('#pl').innerHTML=f.length?f.map(p=>`<div class="card" ${own?`data-pid="${p.id}"`:''} style="margin-bottom:8px;${own?'cursor:pointer':''}"><div class="row"><b>${esc(p.name)}</b><span class="pill">${esc(p.base_unit)}</span></div>
+      <div class="row"><small style="color:var(--mute)">${esc([p.brand,p.model_no,p.code].filter(Boolean).join(' • '))}</small>
+      <span class="${Number(p.min_stock)>0&&Number(p.current_stock)<=Number(p.min_stock)?'warn':''}">স্টক: ${qty(p.current_stock)}</span></div>
+      <div class="row"><small>বিক্রয়মূল্য ${money(p.sale_price)}</small>${own?`<small>গড় ক্রয়মূল্য ${money(p.avg_cost)}</small>`:''}</div></div>`).join(''):'<p class="note">কোনো পণ্য নেই।'+(own?' উপরে "+ নতুন" চেপে প্রথম পণ্য যোগ করুন।':'')+'</p>'};
+  $('#q').oninput=draw;draw();
+  if(own){$('#add').onclick=()=>prodForm();$('#pl').onclick=e=>{const c=e.target.closest('[data-pid]');if(c)prodForm(prods.find(p=>p.id===c.dataset.pid))}}
+}
+/* ---------- PRODUCT ADD / EDIT / DELETE ---------- */
+async function prodForm(p){
+  const e=!!p,[{data:cats},{data:units}]=await Promise.all([sb.from('categories').select('id,name').order('name'),sb.from('units').select('code,name_bn').order('code')]);
+  const v=x=>esc(x??''),s=document.createElement('div');s.className='sheet';
+  s.innerHTML=`<div><h2 style="margin-top:0">${e?'পণ্য সম্পাদনা':'নতুন পণ্য'}</h2>
+  <label>পণ্যের নাম *</label><input id="n" value="${v(p?.name)}">
+  <label>Category</label><select id="c"><option value="">— নির্বাচন করুন —</option>${cats.map(c=>`<option value="${c.id}" ${c.id===p?.category_id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+  <label>Brand</label><input id="b" value="${v(p?.brand)}"><label>Model Number</label><input id="m" value="${v(p?.model_no)}"><label>Product Code</label><input id="k" value="${v(p?.code)}">
+  <label>Unit ${e?'(স্টক থাকায় বদলানো যায় না)':'(স্টক এই ইউনিটে গোনা হবে) *'}</label><select id="u" ${e?'disabled':''}>${units.map(u=>`<option value="${u.code}" ${u.code===p?.base_unit?'selected':''}>${u.code} (${esc(u.name_bn)})</option>`).join('')}</select>
+  <label>বিক্রয়মূল্য (৳) *</label><input id="p" type="number" inputmode="decimal" min="0" step="0.01" value="${v(p?.sale_price)}">
+  <label>সর্বনিম্ন স্টক অ্যালার্ট</label><input id="ms" type="number" inputmode="decimal" min="0" step="0.001" value="${v(p?.min_stock??0)}">
+  <label>বিবরণ</label><textarea id="d" rows="2">${v(p?.description)}</textarea>
+  ${e?`<p class="note">বর্তমান স্টক ${qty(p.current_stock)} ${esc(p.base_unit)}। স্টক শুধু ক্রয়/বিক্রির মাধ্যমে বদলায়।</p>`:'<p class="note">স্টক ও ক্রয়মূল্য "ক্রয়" অংশ থেকে যুক্ত হবে।</p>'}
+  <div class="row"><button class="btn ghost" id="x">বাতিল</button><button class="btn" id="sv">সংরক্ষণ করুন</button></div>
+  ${e?'<button class="btn ghost" id="dl" style="margin-top:12px;color:var(--bad)">পণ্য মুছুন</button>':''}</div>`;
+  document.body.appendChild(s);$('#x').onclick=()=>s.remove();
+  const guard=async(b,t,fn)=>{if(busy)return;busy=true;b.disabled=true;try{await fn();s.remove();refresh()}catch(er){b.disabled=false;toast(er.code==='23505'?'এই Product Code আগে থেকেই আছে':'হয়নি: '+(er.message||er),1)}finally{busy=false}};
+  $('#sv').onclick=()=>{
+    const name=$('#n').value.trim(),price=$('#p').value;
+    if(!name)return toast('পণ্যের নাম দিন',1);if(price===''||Number(price)<0)return toast('বিক্রয়মূল্য দিন',1);
+    const f={name,category_id:$('#c').value||null,brand:$('#b').value.trim()||null,model_no:$('#m').value.trim()||null,code:$('#k').value.trim()||null,sale_price:Number(price),min_stock:Number($('#ms').value||0),description:$('#d').value.trim()||null};
+    guard($('#sv'),0,async()=>{const r=e?await sb.from('products').update({...f,updated_at:new Date().toISOString()}).eq('id',p.id):await sb.from('products').insert({...f,base_unit:$('#u').value,created_by:me.id});if(r.error)throw r.error;toast(e?'পণ্য আপডেট হয়েছে':'পণ্য সংরক্ষণ হয়েছে')})};
+  if(e)$('#dl').onclick=()=>{if(!confirm('"'+p.name+'" মুছে ফেলবেন?\nপণ্যটি তালিকা থেকে সরে যাবে, তবে আগের বিক্রি ও ক্রয়ের হিসাব ঠিক থাকবে।'))return;
+    guard($('#dl'),0,async()=>{const r=await sb.from('products').update({is_active:false}).eq('id',p.id);if(r.error)throw r.error;toast('পণ্য মুছে ফেলা হয়েছে')})};
+}
+
+/* ---------- PURCHASE (kind 'buy') AND SALE (kind 'sale') ---------- */
+function popup(html){const s=document.createElement('div');s.className='sheet';s.innerHTML=`<div style="text-align:center">${html}<button class="btn" id="ok">ঠিক আছে</button></div>`;document.body.appendChild(s);$('#ok').onclick=()=>{s.remove();refresh()}}
+async function txn(kind){
+  const buy=kind==='buy',v=$('#view');
+    const[prods,conv,parties]=await Promise.all([
+    all(()=>sb.from('products').select('id,name,base_unit,sale_price,avg_cost,current_stock').eq('is_active',true).order('name')),
+    all(()=>sb.from('product_unit_conversions').select('product_id,unit')),
+    all(()=>sb.from(buy?'suppliers':'customers').select('id,name,phone').order('name'))]);
+  if(!prods.length){v.innerHTML='<p class="note">আগে "পণ্য" অংশ থেকে পণ্য যোগ করুন।</p>';return}
+  const rid=crypto.randomUUID(),P=id=>prods.find(p=>p.id===id),U=id=>[P(id).base_unit,...conv.filter(c=>c.product_id===id).map(c=>c.unit)];
+  v.innerHTML=`<h2 style="margin-top:0">${buy?'মাল কেনা':'নতুন বিক্রি'}</h2>
+  <label>${buy?'Supplier':'কাস্টমার'}</label><select id="pt"><option value="">${buy?'— নির্বাচন করুন —':'— কাস্টমার ছাড়া (শুধু নগদ) —'}</option>${parties.map(x=>`<option value="${x.id}">${esc(x.name)} ${esc(x.phone||'')}</option>`).join('')}<option value="new">+ নতুন যোগ করুন</option></select>
+  <div id="np" hidden><input id="pn" placeholder="নাম"><input id="ph" type="tel" inputmode="tel" placeholder="মোবাইল নম্বর"></div>
+  <div id="rows"></div><button class="btn ghost" id="ar" style="margin-bottom:12px">+ আরেকটি পণ্য</button>
+  ${buy?'':'<label>Discount (৳)</label><input id="ds" type="number" inputmode="decimal" min="0" value="0">'}
+  <div class="card" style="margin-bottom:12px"><div class="row"><span>মোট</span><b id="tt">৳০</b></div></div>
+  <label>পেমেন্ট</label><select id="pm"><option value="full">${buy?'পুরো নগদ দিয়েছি':'পুরো নগদ পেয়েছি'}</option><option value="due">পুরো বাকি</option><option value="part">আংশিক</option></select>
+  <div id="pa" hidden><label>কত টাকা ${buy?'দিয়েছেন':'পেয়েছেন'} (৳)</label><input id="pv" type="number" inputmode="decimal" min="0"></div>
+  <button class="btn" id="sv">${buy?'ক্রয় সংরক্ষণ করুন':'বিক্রি সম্পন্ন করুন'}</button><div id="rc"></div>`;
+  const R=$('#rows'),items=()=>[...R.children].map(d=>({product_id:d.querySelector('.rp').value,qty:parseFloat(d.querySelector('.rq').value),unit:d.querySelector('.ru').value,price:parseFloat(d.querySelector('.rc').value)}));
+  const total=()=>Math.max(0,sum(items(),i=>Math.round((i.qty||0)*(i.price||0)*100)/100)-(buy?0:Number($('#ds').value||0)));
+  const calc=()=>{$('#tt').textContent=money(total())};
+  const addRow=()=>{const d=document.createElement('div');d.className='card';d.style.marginBottom='8px';
+    d.innerHTML=`<select class="rp">${prods.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
+    <div class="grid"><div><label>পরিমাণ</label><input class="rq" type="number" inputmode="decimal" min="0" step="any" value="1"></div><div><label>Unit</label><select class="ru"></select></div></div>
+    <label>প্রতি Unit ${buy?'ক্রয়মূল্য':'বিক্রয়মূল্য'} (৳)</label><input class="rc" type="number" inputmode="decimal" min="0" step="any">
+    <div class="row"><small class="rs" style="color:var(--mute)"></small><button class="btn ghost sm rx">বাদ দিন</button></div>`;
+    R.appendChild(d);const q=s=>d.querySelector(s),dflt=()=>{const p=P(q('.rp').value);q('.rc').value=q('.ru').value===p.base_unit?(buy?(Number(p.avg_cost)||''):p.sale_price):'';calc()};
+    q('.rp').onchange=()=>{const p=P(q('.rp').value);q('.ru').innerHTML=U(p.id).map(u=>`<option>${u}</option>`).join('');q('.rs').textContent='স্টক: '+qty(p.current_stock)+' '+p.base_unit;dflt()};
+    q('.ru').onchange=dflt;d.querySelectorAll('input').forEach(i=>i.oninput=calc);q('.rx').onclick=()=>{if(R.children.length>1){d.remove();calc()}};q('.rp').onchange()};
+  addRow();$('#ar').onclick=addRow;if(!buy)$('#ds').oninput=calc;
+  $('#pt').onchange=()=>{$('#np').hidden=$('#pt').value!=='new'};$('#pm').onchange=()=>{$('#pa').hidden=$('#pm').value!=='part'};
+  $('#sv').onclick=async()=>{
+    if(busy)return;const it=items(),b=$('#sv');
+    if(it.some(i=>!(i.qty>0)||isNaN(i.price)||i.price<0))return toast('প্রতিটি পণ্যের পরিমাণ ও মূল্য সঠিক দিন',1);
+    const t=total(),m=$('#pm').value,paid=m==='part'?Number($('#pv').value||0):(m==='due'?0:t);
+    if(paid<0||paid>t)return toast('পরিশোধের পরিমাণ মোটের চেয়ে বেশি হতে পারে না',1);
+    busy=true;b.disabled=true;b.textContent='অপেক্ষা করুন...';
+    try{
+      let pid=$('#pt').value||null;
+      if(pid==='new'){const name=$('#pn').value.trim(),phone=$('#ph').value.trim(),tb=buy?'suppliers':'customers';if(!name)throw new Error('নাম দিন');
+        const ex=phone?(await sb.from(tb).select('id').eq('phone',phone).limit(1)).data?.[0]:null;
+        if(ex)pid=ex.id;else{const r=await sb.from(tb).insert(buy?{name,phone:phone||null}:{name,phone:phone||null,created_by:me.id}).select('id').single();if(r.error)throw r.error;pid=r.data.id}}
+      if(!buy&&paid<t&&!pid)throw new Error('বাকি বিক্রির জন্য কাস্টমার নির্বাচন করুন');
+      const r=buy?await sb.rpc('create_purchase',{p_request_id:rid,p_supplier_id:pid,p_items:it.map(i=>({product_id:i.product_id,qty:i.qty,unit:i.unit,unit_cost:i.price})),p_paid:paid,p_method:'cash'})
+        :await sb.rpc('create_sale',{p_request_id:rid,p_customer_id:pid,p_items:it.map(i=>({product_id:i.product_id,qty:i.qty,unit:i.unit,unit_price:i.price})),p_discount:Number($('#ds').value||0),p_paid:paid,p_method:'cash'});
+      if(r.error)throw r.error;
+      if(buy)popup(`<h2>✅ ক্রয় সংরক্ষণ হয়েছে</h2><p>মোট ক্রয়: <b>${money(t)}</b><br>পরিশোধ: ${money(paid)}<br>বাকি দেনা: ${money(t-paid)}</p>`);
+      else{const{data:s}=await sb.from('sales').select('invoice_no,cost_total').eq('id',r.data).single(),pr=t-Number(s?.cost_total||0);
+        popup(pr>=0?`<h2>🎉 অভিনন্দন!</h2><p>আপনার বিক্রি সফলভাবে সম্পন্ন হয়েছে।</p><p>মোট বিক্রি: <b>${money(t)}</b><br>আনুমানিক লাভ: <b class="good">${money(pr)}</b><br>নগদ পেয়েছেন: ${money(paid)} · বাকি: ${money(t-paid)}</p><p class="note">Invoice: ${esc(s?.invoice_no)}</p>`
+          :`<h2>⚠️ লোকসান হয়েছে</h2><p>এই বিক্রিতে লোকসান: <b class="bad">${money(-pr)}</b></p><p class="note">চিন্তা করবেন না, সঠিক হিসাব রাখুন এবং পরের সিদ্ধান্ত আরও ভালোভাবে নিন।</p>`)}
+    }catch(er){b.disabled=false;b.textContent=buy?'ক্রয় সংরক্ষণ করুন':'বিক্রি সম্পন্ন করুন';toast(er.message||String(er),1)}finally{busy=false}};
+  const{data:rec}=await sb.from(buy?'purchases':'sales').select(buy?'id,total,due,created_at':'id,invoice_no,total,due,status,created_at').order('created_at',{ascending:false}).limit(10);
+  $('#rc').innerHTML=`<h2>সাম্প্রতিক ${buy?'ক্রয়':'বিক্রি'}</h2>`+((rec||[]).map(r=>`<div class="card row" style="margin-bottom:8px"><span>${buy?'':esc(r.invoice_no)+' • '}${new Date(r.created_at).toLocaleString('bn-BD',{timeZone:'Asia/Dhaka',dateStyle:'short',timeStyle:'short'})}${r.status==='void'?' <b class="bad">(বাতিল)</b>':''}</span><span>${money(r.total)}${Number(r.due)>0?` <small class="warn">বাকি ${money(r.due)}</small>`:''}${!buy&&r.status!=='void'?` <button class="btn ghost sm" data-v="${r.id}">বাতিল</button>`:''}</span></div>`).join('')||'<p class="note">এখনো কিছু নেই।</p>');
+  $('#rc').onclick=async e=>{const id=e.target.dataset?.v;if(!id||!confirm('এই বিক্রি বাতিল করবেন? স্টক ফেরত আসবে এবং নগদ টাকা ফেরত হিসেবে লেখা হবে।'))return;
+    const r=await sb.rpc('void_sale',{p_sale_id:id,p_reason:'Owner বাতিল করেছেন'});r.error?toast(r.error.message,1):(toast('বিক্রি বাতিল হয়েছে'),refresh())};
+}
+
+/* ---------- PULL TO REFRESH ---------- */
+let y0=null,pull=0;const ptr=$('#ptr');
+addEventListener('touchstart',e=>{y0=(scrollY<=0&&me&&!document.querySelector('.sheet'))?e.touches[0].clientY:null;pull=0},{passive:true});
+addEventListener('touchmove',e=>{if(y0==null)return;pull=e.touches[0].clientY-y0;if(pull>0)ptr.style.transform=`translateY(${Math.min(pull,110)}px)`},{passive:true});
+addEventListener('touchend',()=>{if(y0!=null&&pull>80){ptr.style.transform='translateY(70px)';refresh().finally(()=>ptr.style.transform='')}else ptr.style.transform='';y0=null});
+
+/* ---------- START ---------- */
+(async()=>{const{data:{session}}=await sb.auth.getSession();session?afterLogin(session.user):loginView()})();
+</script>
+</body>
+</html>
