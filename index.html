@@ -71,13 +71,16 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const money=n=>'৳'+Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:2});
 const qty=n=>Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:3});
 const sum=(a,f)=>a.reduce((s,x)=>s+Number(f(x)||0),0);
-let me=null,tab='dash',busy=false;
+let me=null,tab='dash',busy=false,period='day';
+const PL={day:'আজকের',week:'এই সপ্তাহের',month:'এই মাসের',year:'এই বছরের'};
 
 const LOGO='<svg width="56" height="56" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#101114" stroke="#1769e0" stroke-width="2"/><path d="M27 8 14 27h8l-3 13 15-21h-9z" fill="#1769e0"/></svg>';
 const CIRCUIT='<svg class="c" viewBox="0 0 200 100" fill="none" stroke="#fff" stroke-width="1.5"><path d="M0 20h60l10 10h50M0 50h40l15 15h70l10-10h40M0 80h90l10-10h100"/><circle cx="120" cy="30" r="4"/><circle cx="125" cy="65" r="4"/><circle cx="100" cy="70" r="4"/></svg>';
 
 // Bangladesh day start (UTC+6, no DST) as ISO
 function dayStart(){const off=6*36e5,d=new Date(Date.now()+off);return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-off).toISOString()}
+function periodStart(p){const off=6*36e5,d=new Date(Date.now()+off),Y=d.getUTCFullYear(),M=d.getUTCMonth(),D=d.getUTCDate();let t=Date.UTC(Y,M,D)-off;
+  if(p==='week')t-=((d.getUTCDay()+1)%7)*864e5;else if(p==='month')t=Date.UTC(Y,M,1)-off;else if(p==='year')t=Date.UTC(Y,0,1)-off;return new Date(t).toISOString()}
 // read all rows (Supabase returns max 1000 per request)
 async function all(mk){let out=[],from=0;for(;;){const{data,error}=await mk().range(from,from+999);if(error)throw error;out=out.concat(data);if(data.length<1000)return out;from+=1000}}
 
@@ -122,14 +125,14 @@ function go(t){tab=t;document.querySelectorAll('nav button').forEach(b=>b.classL
 async function refresh(){
   const v=$('#view');v.innerHTML='<i class="spin"></i>';
   try{
-    if(tab==='dash')await dash();else if(tab==='inv')await inv();else if(tab==='buy')await txn('buy');else if(tab==='sales')await txn('sale');
+    if(tab==='dash')await dash();else if(tab==='inv')await inv();else if(tab==='buy')await txn('buy');else if(tab==='sales')await txn('sale');else if(tab==='open')await txn('open');
     else v.innerHTML='<p class="note">এই অংশ পরের ধাপে তৈরি হবে। এখনো এটি চালু নয়।</p>';
   }catch(e){v.innerHTML=`<div class="err">তথ্য আনা যায়নি: ${esc(e.message||e)}</div>`}
 }
 
 /* ---------- DASHBOARD (all numbers come from the database) ---------- */
 async function dash(){
-  const st=dayStart(),own=me.role==='owner';
+  const st=periodStart(period),own=me.role==='owner';
   const[today,dues,pdues,prods,cash]=await Promise.all([
     all(()=>sb.from('sales').select('total,paid,due,cost_total').eq('status','active').gte('sale_date',st)),
     all(()=>sb.from('sales').select('due').eq('status','active').gt('due',0)),
@@ -141,12 +144,12 @@ async function dash(){
   const bal=sum(cash.filter(c=>c.direction==='in'),c=>c.amount)-sum(cash.filter(c=>c.direction==='out'),c=>c.amount);
   const low=prods.filter(p=>Number(p.min_stock)>0&&Number(p.current_stock)<=Number(p.min_stock));
   const card=(l,v,c='')=>`<div class="card"><small>${l}</small><strong class="${c}">${v}</strong></div>`;
-  $('#view').innerHTML=`<div class="grid">
-   <div class="card wide hero"><small>আজকের মোট বিক্রি</small><strong>${money(total)}</strong></div>
-   ${card('আজকের আনুমানিক লাভ',money(profit),profit<0?'bad':'good')}
-   ${card('আজকের বিক্রির সংখ্যা',qty(today.length))}
-   ${card('আজকের নগদ পাওয়া',money(sum(today,s=>s.paid)))}
-   ${card('আজকের বাকি বিক্রি',money(sum(today,s=>s.due)),'warn')}
+  $('#view').innerHTML=`<div class="row" style="gap:6px;margin-bottom:10px">${[['day','আজ'],['week','সপ্তাহ'],['month','মাস'],['year','বছর']].map(([k,l])=>`<button class="btn ${k===period?'':'ghost'} sm" data-p="${k}" style="flex:1">${l}</button>`).join('')}</div><div class="grid">
+   <div class="card wide hero"><small>${PL[period]} মোট বিক্রি</small><strong>${money(total)}</strong></div>
+   ${card(PL[period]+' আনুমানিক লাভ',money(profit),profit<0?'bad':'good')}
+   ${card(PL[period]+' বিক্রির সংখ্যা',qty(today.length))}
+   ${card(PL[period]+' নগদ পাওয়া',money(sum(today,s=>s.paid)))}
+   ${card(PL[period]+' বাকি বিক্রি',money(sum(today,s=>s.due)),'warn')}
    ${card('মোট বাকি পাওনা',money(sum(dues,s=>s.due)))}
    ${card('মোট বাকি দেনা',money(sum(pdues,s=>s.due)))}
    ${card('মোট পণ্য',qty(prods.length))}
@@ -154,14 +157,16 @@ async function dash(){
    <div class="card wide"><small>দোকানের বর্তমান নগদ ক্যাশ</small><strong>${money(bal)}</strong></div>
   </div>
   ${low.length?`<h2>⚠️ স্টক কমে গেছে</h2>`+low.map(p=>`<div class="card row" style="margin-bottom:8px"><span>${esc(p.name)}</span><span class="warn">${qty(p.current_stock)} ${esc(p.base_unit)} (সর্বনিম্ন ${qty(p.min_stock)})</span></div>`).join(''):''}
-  <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>`;
+  <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>${own?'<button class="btn ghost" id="bk">⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)</button><p class="note">ব্যাকআপে সব হিসাব থাকে, ছবির ফাইল থাকে না। সপ্তাহে অন্তত একবার ডাউনলোড করে iCloud বা Files-এ রাখুন।</p>':''}`;
+  document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{period=b.dataset.p;refresh()});
+  if(own)$('#bk').onclick=backup;
 }
 
 /* ---------- INVENTORY ---------- */
 async function inv(){
   const prods=await all(()=>sb.from('products').select('*').eq('is_active',true).order('name'));
   const own=true; // staff may add/edit/delete products
-  $('#view').innerHTML=`<div class="row" style="margin-bottom:10px"><input id="q" placeholder="পণ্য খুঁজুন (নাম, ব্র্যান্ড, কোড)" style="margin:0">${own?'<button class="btn sm" id="add">+ নতুন</button>':''}</div>${own?'<p class="note" style="margin:0 0 8px">পণ্যে চাপলে সম্পাদনা বা মুছে ফেলা যাবে।</p>':''}<div id="pl"></div>`;
+  $('#view').innerHTML=`<div class="row" style="margin-bottom:10px"><input id="q" placeholder="পণ্য খুঁজুন (নাম, ব্র্যান্ড, কোড)" style="margin:0">${own?'<button class="btn sm" id="add">+ নতুন</button>':''}</div><button class="btn ghost" id="os" style="margin-bottom:8px">⬆ আগের মজুদ তুলুন (ক্যাশে প্রভাব নেই)</button>${own?'<p class="note" style="margin:0 0 8px">পণ্যে চাপলে সম্পাদনা বা মুছে ফেলা যাবে।</p>':''}<div id="pl"></div>`;
   const draw=()=>{const k=$('#q').value.trim().toLowerCase();
     const f=prods.filter(p=>[p.name,p.brand,p.code,p.model_no].join(' ').toLowerCase().includes(k));
     $('#pl').innerHTML=f.length?f.map(p=>`<div class="card" ${own?`data-pid="${p.id}"`:''} style="margin-bottom:8px;${own?'cursor:pointer':''}"><div class="row"><b>${esc(p.name)}</b><span class="pill">${esc(p.base_unit)}</span></div>
@@ -169,6 +174,7 @@ async function inv(){
       <span class="${Number(p.min_stock)>0&&Number(p.current_stock)<=Number(p.min_stock)?'warn':''}">স্টক: ${qty(p.current_stock)}</span></div>
       <div class="row"><small>বিক্রয়মূল্য ${money(p.sale_price)}</small>${own?`<small>গড় ক্রয়মূল্য ${money(p.avg_cost)}</small>`:''}</div></div>`).join(''):'<p class="note">কোনো পণ্য নেই।'+(own?' উপরে "+ নতুন" চেপে প্রথম পণ্য যোগ করুন।':'')+'</p>'};
   $('#q').oninput=draw;draw();
+  $('#os').onclick=()=>{tab='open';document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));refresh()};
   if(own){$('#add').onclick=()=>prodForm();$('#pl').onclick=e=>{const c=e.target.closest('[data-pid]');if(c)prodForm(prods.find(p=>p.id===c.dataset.pid))}}
 }
 /* ---------- PRODUCT ADD / EDIT / DELETE ---------- */
@@ -197,40 +203,67 @@ async function prodForm(p){
     guard($('#dl'),0,async()=>{const r=await sb.from('products').update({is_active:false}).eq('id',p.id);if(r.error)throw r.error;toast('পণ্য মুছে ফেলা হয়েছে')})};
 }
 
+/* ---------- PHOTOS (memo / receipt) ---------- */
+const fd=t=>new Date(t).toLocaleString('bn-BD',{timeZone:'Asia/Dhaka',dateStyle:'short',timeStyle:'short'});
+const shrink=async f=>{if(!f.type.startsWith('image/'))throw new Error('শুধু ছবি দেওয়া যাবে');if(f.size>20e6)throw new Error('ছবি খুব বড় (২০ MB-এর বেশি)');
+  const b=await createImageBitmap(f),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);
+  return new Promise((ok,no)=>c.toBlob(x=>x?ok(x):no(new Error('ছবি প্রস্তুত করা যায়নি')),'image/jpeg',.8))};
+async function upload(type,id,files){let ok=0;for(const f of files){try{const blob=await shrink(f),path=`${type}/${id}/${crypto.randomUUID()}.jpg`;
+  const u=await sb.storage.from('shop-files').upload(path,blob,{contentType:'image/jpeg'});if(u.error)throw u.error;
+  const a=await sb.from('attachments').insert({owner_type:type,owner_id:id,kind:'memo',storage_path:path,created_by:me.id});if(a.error)throw a.error;ok++}catch(e){toast('ছবি যায়নি: '+(e.message||e),1)}}return ok}
+async function viewer(type,id){
+  const s=document.createElement('div');s.className='sheet';s.innerHTML='<div><i class="spin"></i></div>';document.body.appendChild(s);
+  const draw=async()=>{const{data:at}=await sb.from('attachments').select('storage_path').eq('owner_type',type).eq('owner_id',id).order('created_at'),n=at?.length||0;
+    const{data:su}=n?await sb.storage.from('shop-files').createSignedUrls(at.map(a=>a.storage_path),3600):{data:[]};
+    s.firstChild.innerHTML=`<h2 style="margin-top:0">মেমো / রসিদের ছবি</h2>${su?.length?`<div class="grid">${su.map(u=>`<a href="${esc(u.signedUrl)}" target="_blank"><img src="${esc(u.signedUrl)}" style="width:100%;border-radius:10px"></a>`).join('')}</div><p class="note">ছবিতে চাপলে বড় করে দেখা যাবে।</p>`:'<p class="note">কোনো ছবি নেই।</p>'}
+    <label>নতুন ছবি যোগ করুন (এখন ${qty(n)}/১৫)</label><input id="vf" type="file" accept="image/*" multiple><div class="row"><button class="btn ghost" id="vx">বন্ধ করুন</button><button class="btn" id="vu">ছবি আপলোড</button></div>`;
+    $('#vx').onclick=()=>s.remove();
+    $('#vu').onclick=async()=>{const f=[...$('#vf').files].slice(0,15-n);if(!f.length)return toast('ছবি বেছে নিন (সর্বোচ্চ ১৫টি)',1);$('#vu').disabled=true;await upload(type,id,f);draw()}};
+  draw()}
+
+/* ---------- BACKUP (Owner) ---------- */
+async function backup(){const b=$('#bk');b.disabled=true;b.textContent='ব্যাকআপ তৈরি হচ্ছে...';
+  try{const T=['shop_settings','categories','units','products','product_unit_conversions','stock_movements','suppliers','customers','purchases','purchase_items','sales','sale_items','payments','cash_transactions','daily_closings','activity_logs','attachments','opening_stock_batches','profiles'],out={};
+    for(const t of T)out[t]=await all(()=>sb.from(t).select('*'));
+    const name='manik-backup-'+new Date(Date.now()+6*36e5).toISOString().slice(0,10)+'.json',url=URL.createObjectURL(new Blob([JSON.stringify({app:'manik-shop',exported_at:new Date().toISOString(),tables:out},null,1)],{type:'application/json'}));
+    popup(`<h2>✅ ব্যাকআপ প্রস্তুত</h2><p>নিচের বাটনে চেপে ফাইলটি Files অ্যাপে সংরক্ষণ করুন।</p><a class="btn" style="display:block;text-decoration:none;margin-bottom:10px" href="${url}" download="${name}">⬇ ফাইল সংরক্ষণ করুন</a>`);
+  }catch(e){toast('ব্যাকআপ হয়নি: '+(e.message||e),1);b.disabled=false;b.textContent='⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)'}}
+
 /* ---------- PURCHASE (kind 'buy') AND SALE (kind 'sale') ---------- */
 function popup(html){const s=document.createElement('div');s.className='sheet';s.innerHTML=`<div style="text-align:center">${html}<button class="btn" id="ok">ঠিক আছে</button></div>`;document.body.appendChild(s);$('#ok').onclick=()=>{s.remove();refresh()}}
 async function txn(kind){
-  const buy=kind==='buy',v=$('#view');
+  const buy=kind==='buy',op=kind==='open',v=$('#view');
     const[prods,conv,parties]=await Promise.all([
     all(()=>sb.from('products').select('id,name,base_unit,sale_price,avg_cost,current_stock').eq('is_active',true).order('name')),
     all(()=>sb.from('product_unit_conversions').select('product_id,unit')),
-    all(()=>sb.from(buy?'suppliers':'customers').select('id,name,phone').order('name'))]);
+    op?Promise.resolve([]):all(()=>sb.from(buy?'suppliers':'customers').select('id,name,phone').order('name'))]);
   if(!prods.length){v.innerHTML='<p class="note">আগে "পণ্য" অংশ থেকে পণ্য যোগ করুন।</p>';return}
   const rid=crypto.randomUUID(),P=id=>prods.find(p=>p.id===id),U=id=>[P(id).base_unit,...conv.filter(c=>c.product_id===id).map(c=>c.unit)];
-  v.innerHTML=`<h2 style="margin-top:0">${buy?'মাল কেনা':'নতুন বিক্রি'}</h2>
-  <label>${buy?'Supplier':'কাস্টমার'}</label><select id="pt"><option value="">${buy?'— নির্বাচন করুন —':'— কাস্টমার ছাড়া (শুধু নগদ) —'}</option>${parties.map(x=>`<option value="${x.id}">${esc(x.name)} ${esc(x.phone||'')}</option>`).join('')}<option value="new">+ নতুন যোগ করুন</option></select>
-  <div id="np" hidden><input id="pn" placeholder="নাম"><input id="ph" type="tel" inputmode="tel" placeholder="মোবাইল নম্বর"></div>
+  const lbl=op?'মজুদ সংরক্ষণ করুন':buy?'ক্রয় সংরক্ষণ করুন':'বিক্রি সম্পন্ন করুন';
+  v.innerHTML=`<h2 style="margin-top:0">${op?'আগের মজুদ তোলা':buy?'মাল কেনা':'নতুন বিক্রি'}</h2>${op?'<p class="note">দোকানে আগে থেকে থাকা মাল এখানে তুলুন। এতে ক্যাশ বা Supplier-এর দেনায় কোনো প্রভাব পড়ে না। ক্রয়মূল্য ঠিকঠাক দিন, নইলে লাভের হিসাব ভুল হবে।</p>':''}
+  <div ${op?'hidden':''}><label>${buy?'Supplier':'কাস্টমার'}</label><select id="pt"><option value="">${buy?'— নির্বাচন করুন —':'— কাস্টমার ছাড়া (শুধু নগদ) —'}</option>${parties.map(x=>`<option value="${x.id}">${esc(x.name)} ${esc(x.phone||'')}</option>`).join('')}<option value="new">+ নতুন যোগ করুন</option></select>
+  <div id="np" hidden><input id="pn" placeholder="নাম"><input id="ph" type="tel" inputmode="tel" placeholder="মোবাইল নম্বর"></div></div>
   <div id="rows"></div><button class="btn ghost" id="ar" style="margin-bottom:12px">+ আরেকটি পণ্য</button>
-  ${buy?'':'<label>Discount (৳)</label><input id="ds" type="number" inputmode="decimal" min="0" value="0">'}
+  ${buy||op?'':'<label>Discount (৳)</label><input id="ds" type="number" inputmode="decimal" min="0" value="0">'}
   <div class="card" style="margin-bottom:12px"><div class="row"><span>মোট</span><b id="tt">৳০</b></div></div>
-  <label>পেমেন্ট</label><select id="pm"><option value="full">${buy?'পুরো নগদ দিয়েছি':'পুরো নগদ পেয়েছি'}</option><option value="due">পুরো বাকি</option><option value="part">আংশিক</option></select>
-  <div id="pa" hidden><label>কত টাকা ${buy?'দিয়েছেন':'পেয়েছেন'} (৳)</label><input id="pv" type="number" inputmode="decimal" min="0"></div>
-  <button class="btn" id="sv">${buy?'ক্রয় সংরক্ষণ করুন':'বিক্রি সম্পন্ন করুন'}</button><div id="rc"></div>`;
+  <div ${op?'hidden':''}><label>পেমেন্ট</label><select id="pm"><option value="full">${buy?'পুরো নগদ দিয়েছি':'পুরো নগদ পেয়েছি'}</option><option value="due">পুরো বাকি</option><option value="part">আংশিক</option></select>
+  <div id="pa" hidden><label>কত টাকা ${buy?'দিয়েছেন':'পেয়েছেন'} (৳)</label><input id="pv" type="number" inputmode="decimal" min="0"></div></div>
+  ${buy||op?'<label>মেমো / রসিদের ছবি (সর্বোচ্চ ১৫টি)</label><input id="mf" type="file" accept="image/*" multiple>':''}<button class="btn" id="sv">${lbl}</button><div id="rc"></div>`;
   const R=$('#rows'),items=()=>[...R.children].map(d=>({product_id:d.querySelector('.rp').value,qty:parseFloat(d.querySelector('.rq').value),unit:d.querySelector('.ru').value,price:parseFloat(d.querySelector('.rc').value)}));
-  const total=()=>Math.max(0,sum(items(),i=>Math.round((i.qty||0)*(i.price||0)*100)/100)-(buy?0:Number($('#ds').value||0)));
+  const total=()=>Math.max(0,sum(items(),i=>Math.round((i.qty||0)*(i.price||0)*100)/100)-(buy||op?0:Number($('#ds').value||0)));
   const calc=()=>{$('#tt').textContent=money(total())};
   const addRow=()=>{const d=document.createElement('div');d.className='card';d.style.marginBottom='8px';
     d.innerHTML=`<select class="rp">${prods.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
     <div class="grid"><div><label>পরিমাণ</label><input class="rq" type="number" inputmode="decimal" min="0" step="any" value="1"></div><div><label>Unit</label><select class="ru"></select></div></div>
-    <label>প্রতি Unit ${buy?'ক্রয়মূল্য':'বিক্রয়মূল্য'} (৳)</label><input class="rc" type="number" inputmode="decimal" min="0" step="any">
+    <label>প্রতি Unit ${buy||op?'ক্রয়মূল্য':'বিক্রয়মূল্য'} (৳)</label><input class="rc" type="number" inputmode="decimal" min="0" step="any">
     <div class="row"><small class="rs" style="color:var(--mute)"></small><button class="btn ghost sm rx">বাদ দিন</button></div>`;
-    R.appendChild(d);const q=s=>d.querySelector(s),dflt=()=>{const p=P(q('.rp').value);q('.rc').value=q('.ru').value===p.base_unit?(buy?(Number(p.avg_cost)||''):p.sale_price):'';calc()};
+    R.appendChild(d);const q=s=>d.querySelector(s),dflt=()=>{const p=P(q('.rp').value);q('.rc').value=q('.ru').value===p.base_unit?(buy||op?(Number(p.avg_cost)||''):p.sale_price):'';calc()};
     q('.rp').onchange=()=>{const p=P(q('.rp').value);q('.ru').innerHTML=U(p.id).map(u=>`<option>${u}</option>`).join('');q('.rs').textContent='স্টক: '+qty(p.current_stock)+' '+p.base_unit;dflt()};
     q('.ru').onchange=dflt;d.querySelectorAll('input').forEach(i=>i.oninput=calc);q('.rx').onclick=()=>{if(R.children.length>1){d.remove();calc()}};q('.rp').onchange()};
-  addRow();$('#ar').onclick=addRow;if(!buy)$('#ds').oninput=calc;
+  addRow();$('#ar').onclick=addRow;if(!buy&&!op)$('#ds').oninput=calc;
   $('#pt').onchange=()=>{$('#np').hidden=$('#pt').value!=='new'};$('#pm').onchange=()=>{$('#pa').hidden=$('#pm').value!=='part'};
   $('#sv').onclick=async()=>{
-    if(busy)return;const it=items(),b=$('#sv');
+    if(busy)return;const it=items(),b=$('#sv'),files=($('#mf')?[...$('#mf').files]:[]).slice(0,15);
     if(it.some(i=>!(i.qty>0)||isNaN(i.price)||i.price<0))return toast('প্রতিটি পণ্যের পরিমাণ ও মূল্য সঠিক দিন',1);
     const t=total(),m=$('#pm').value,paid=m==='part'?Number($('#pv').value||0):(m==='due'?0:t);
     if(paid<0||paid>t)return toast('পরিশোধের পরিমাণ মোটের চেয়ে বেশি হতে পারে না',1);
@@ -241,18 +274,24 @@ async function txn(kind){
         const ex=phone?(await sb.from(tb).select('id').eq('phone',phone).limit(1)).data?.[0]:null;
         if(ex)pid=ex.id;else{const r=await sb.from(tb).insert(buy?{name,phone:phone||null}:{name,phone:phone||null,created_by:me.id}).select('id').single();if(r.error)throw r.error;pid=r.data.id}}
       if(!buy&&paid<t&&!pid)throw new Error('বাকি বিক্রির জন্য কাস্টমার নির্বাচন করুন');
-      const r=buy?await sb.rpc('create_purchase',{p_request_id:rid,p_supplier_id:pid,p_items:it.map(i=>({product_id:i.product_id,qty:i.qty,unit:i.unit,unit_cost:i.price})),p_paid:paid,p_method:'cash'})
+      const r=op?await sb.rpc('add_opening_stock',{p_request_id:rid,p_items:it.map(i=>({product_id:i.product_id,qty:i.qty,unit:i.unit,unit_cost:i.price}))}):buy?await sb.rpc('create_purchase',{p_request_id:rid,p_supplier_id:pid,p_items:it.map(i=>({product_id:i.product_id,qty:i.qty,unit:i.unit,unit_cost:i.price})),p_paid:paid,p_method:'cash'})
         :await sb.rpc('create_sale',{p_request_id:rid,p_customer_id:pid,p_items:it.map(i=>({product_id:i.product_id,qty:i.qty,unit:i.unit,unit_price:i.price})),p_discount:Number($('#ds').value||0),p_paid:paid,p_method:'cash'});
       if(r.error)throw r.error;
-      if(buy)popup(`<h2>✅ ক্রয় সংরক্ষণ হয়েছে</h2><p>মোট ক্রয়: <b>${money(t)}</b><br>পরিশোধ: ${money(paid)}<br>বাকি দেনা: ${money(t-paid)}</p>`);
+      if(files.length){b.textContent='ছবি আপলোড হচ্ছে...';const n=await upload(op?'opening_stock':'purchase',op?rid:r.data,files);if(n<files.length)toast('কিছু ছবি যায়নি। তালিকা থেকে "📎 ছবি" চেপে আবার দিন।',1)}
+      if(op)popup(`<h2>✅ মজুদ তোলা হয়েছে</h2><p>মোট মূল্য: <b>${money(t)}</b><br>ক্যাশ বা দেনায় কোনো পরিবর্তন হয়নি।</p>`)
+      else if(buy)popup(`<h2>✅ ক্রয় সংরক্ষণ হয়েছে</h2><p>মোট ক্রয়: <b>${money(t)}</b><br>পরিশোধ: ${money(paid)}<br>বাকি দেনা: ${money(t-paid)}</p>`);
       else{const{data:s}=await sb.from('sales').select('invoice_no,cost_total').eq('id',r.data).single(),pr=t-Number(s?.cost_total||0);
         popup(pr>=0?`<h2>🎉 অভিনন্দন!</h2><p>আপনার বিক্রি সফলভাবে সম্পন্ন হয়েছে।</p><p>মোট বিক্রি: <b>${money(t)}</b><br>আনুমানিক লাভ: <b class="good">${money(pr)}</b><br>নগদ পেয়েছেন: ${money(paid)} · বাকি: ${money(t-paid)}</p><p class="note">Invoice: ${esc(s?.invoice_no)}</p>`
           :`<h2>⚠️ লোকসান হয়েছে</h2><p>এই বিক্রিতে লোকসান: <b class="bad">${money(-pr)}</b></p><p class="note">চিন্তা করবেন না, সঠিক হিসাব রাখুন এবং পরের সিদ্ধান্ত আরও ভালোভাবে নিন।</p>`)}
-    }catch(er){b.disabled=false;b.textContent=buy?'ক্রয় সংরক্ষণ করুন':'বিক্রি সম্পন্ন করুন';toast(er.message||String(er),1)}finally{busy=false}};
-  const{data:rec}=await sb.from(buy?'purchases':'sales').select(buy?'id,total,due,created_at':'id,invoice_no,total,due,status,created_at').order('created_at',{ascending:false}).limit(10);
-  $('#rc').innerHTML=`<h2>সাম্প্রতিক ${buy?'ক্রয়':'বিক্রি'}</h2>`+((rec||[]).map(r=>`<div class="card row" style="margin-bottom:8px"><span>${buy?'':esc(r.invoice_no)+' • '}${new Date(r.created_at).toLocaleString('bn-BD',{timeZone:'Asia/Dhaka',dateStyle:'short',timeStyle:'short'})}${r.status==='void'?' <b class="bad">(বাতিল)</b>':''}</span><span>${money(r.total)}${Number(r.due)>0?` <small class="warn">বাকি ${money(r.due)}</small>`:''}${!buy&&r.status!=='void'?` <button class="btn ghost sm" data-v="${r.id}">বাতিল</button>`:''}</span></div>`).join('')||'<p class="note">এখনো কিছু নেই।</p>');
-  $('#rc').onclick=async e=>{const id=e.target.dataset?.v;if(!id||!confirm('এই বিক্রি বাতিল করবেন? স্টক ফেরত আসবে এবং নগদ টাকা ফেরত হিসেবে লেখা হবে।'))return;
-    const r=await sb.rpc('void_sale',{p_sale_id:id,p_reason:'Owner বাতিল করেছেন'});r.error?toast(r.error.message,1):(toast('বিক্রি বাতিল হয়েছে'),refresh())};
+    }catch(er){b.disabled=false;b.textContent=lbl;toast(er.message||String(er),1)}finally{busy=false}};
+  if(op){const[{data:bs},{data:mv}]=await Promise.all([sb.from('opening_stock_batches').select('request_id,created_at').order('created_at',{ascending:false}).limit(30),sb.from('stock_movements').select('ref_id,products(name)').eq('ref_type','opening_stock').limit(1000)]);
+    $('#rc').innerHTML='<h2>আগের মজুদের তালিকা</h2>'+((bs||[]).map(b=>`<div class="card row" style="margin-bottom:8px"><span>${fd(b.created_at)}<br><small>${esc((mv||[]).filter(m=>m.ref_id===b.request_id).map(m=>m.products?.name).filter(Boolean).join(', '))}</small></span><button class="btn ghost sm" data-ph="${b.request_id}">📎 ছবি</button></div>`).join('')||'<p class="note">এখনো কিছু নেই।</p>');
+    $('#rc').onclick=e=>{if(e.target.dataset?.ph)viewer('opening_stock',e.target.dataset.ph)};return}
+  const{data:rec}=await sb.from(buy?'purchases':'sales').select(buy?'id,total,due,created_at,suppliers(name),purchase_items(products(name))':'id,invoice_no,total,due,status,created_at').order('created_at',{ascending:false}).limit(buy?50:15);
+  $('#rc').innerHTML=`<h2>সাম্প্রতিক ${buy?'ক্রয়':'বিক্রি'}</h2>${buy?'<input id="rs" placeholder="পণ্য বা Supplier দিয়ে খুঁজুন">':''}`+((rec||[]).map(r=>`<div class="card row" style="margin-bottom:8px"><span>${buy?'':esc(r.invoice_no)+' • '}${fd(r.created_at)}${r.status==='void'?' <b class="bad">(বাতিল)</b>':''}${buy?`<br><small>${esc(r.suppliers?.name||'Supplier নেই')}: ${esc((r.purchase_items||[]).map(i=>i.products?.name).filter(Boolean).join(', '))}</small>`:''}</span><span>${money(r.total)}${Number(r.due)>0?` <small class="warn">বাকি ${money(r.due)}</small>`:''}${buy?` <button class="btn ghost sm" data-ph="${r.id}">📎 ছবি</button>`:''}${!buy&&r.status!=='void'?` <button class="btn ghost sm" data-v="${r.id}">বাতিল</button>`:''}</span></div>`).join('')||'<p class="note">এখনো কিছু নেই।</p>');
+  if(buy)$('#rs').oninput=()=>{const k=$('#rs').value.trim().toLowerCase();[...$('#rc').querySelectorAll('.card')].forEach(c=>c.hidden=!c.textContent.toLowerCase().includes(k))};
+  $('#rc').onclick=async e=>{if(e.target.dataset?.ph)return viewer('purchase',e.target.dataset.ph);const id=e.target.dataset?.v;if(!id||!confirm('এই বিক্রি বাতিল করবেন? স্টক ফেরত আসবে এবং নগদ টাকা ফেরত হিসেবে লেখা হবে।'))return;
+    const r=await sb.rpc('void_sale',{p_sale_id:id,p_reason:'বাতিল করা হয়েছে'});r.error?toast(r.error.message,1):(toast('বিক্রি বাতিল হয়েছে'),refresh())};
 }
 
 /* ---------- PULL TO REFRESH ---------- */
