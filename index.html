@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MANIK">
+<meta name="theme-color" content="#101114">
+<title>MANIK ELECTRIC &amp; ELECTRONICS SERVICE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--ink:#101114;--mute:#6b7280;--line:#e3e7ee;--blue:#1769e0;--good:#14804a;--bad:#c62828;--warn:#b45309}
+:root[data-theme=dark]{--bg:#0e0f12;--card:#17191e;--ink:#f1f3f6;--mute:#9aa3b2;--line:#262a32;--blue:#4b8ef5;--good:#3ecf8e;--bad:#ff6b6b;--warn:#f5a524}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans Bengali',system-ui,sans-serif;font-size:16px;line-height:1.5}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#101114;color:#fff}
+.top b{flex:1;font-size:14px;line-height:1.2}
+.ib{background:#ffffff1a;border:0;color:#fff;width:40px;height:40px;border-radius:12px;font-size:18px}
+.banner{margin:12px 14px;border-radius:18px;padding:22px 18px;color:#fff;background:linear-gradient(135deg,#101114 0%,#0b2a5b 60%,#1769e0 100%);position:relative;overflow:hidden}
+.banner svg.c{position:absolute;right:-10px;top:0;height:100%;opacity:.25}
+.banner h1{margin:8px 0 2px;font-size:17px;line-height:1.3;position:relative}
+.banner p{margin:0;font-size:12px;opacity:.85;position:relative}
+main{padding:0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.card small{color:var(--mute);display:block;font-size:12px}
+.card strong{font-size:20px;display:block;margin-top:2px}
+.card.wide{grid-column:1/-1}
+.card.hero strong{font-size:28px;color:var(--blue)}
+.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+h2{font-size:16px;margin:18px 2px 8px}
+.note{color:var(--mute);font-size:13px;margin:12px 2px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;padding:10px 0 8px;font-size:12px;color:var(--mute)}
+nav button span{display:block;font-size:20px}
+nav button.on{color:var(--blue);font-weight:700}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:700;width:100%}
+.btn:disabled{opacity:.55}
+.btn.sm{width:auto;padding:8px 14px}
+.btn.ghost{background:none;color:var(--mute);border:1px solid var(--line)}
+input,select,textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin:4px 0 12px}
+label{font-size:13px;color:var(--mute)}
+.login{max-width:420px;margin:0 auto;padding:28px 18px}
+.login .logo{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;margin-bottom:22px}
+.err{background:#c6282820;color:var(--bad);padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.pill{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--line)}
+.sheet{position:fixed;inset:0;background:#0009;display:flex;align-items:flex-end;z-index:20}
+.sheet>div{background:var(--bg);width:100%;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.toast{position:fixed;left:14px;right:14px;top:calc(12px + env(safe-area-inset-top,0px));background:#101114;color:#fff;padding:12px 14px;border-radius:12px;z-index:30;font-size:14px;border-left:4px solid var(--blue)}
+.toast.e{border-color:var(--bad)}
+.spin{display:block;width:30px;height:30px;margin:40px auto;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:r .8s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+#ptr{position:fixed;top:calc(env(safe-area-inset-top,0px) - 50px);left:50%;margin-left:-18px;width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;z-index:15;transition:transform .15s}
+@media(min-width:760px){body{max-width:760px;margin:0 auto}}
+@media(prefers-reduced-motion:reduce){.spin{animation-duration:2s}}
+</style>
+</head>
+<body>
+<div id="ptr"><i class="spin" style="margin:0;width:18px;height:18px"></i></div>
+<div id="app"></div>
+<script>
+const sb=supabase.createClient('https://xejpvkhjjapqytxbnwnp.supabase.co','sb_publishable_qhyMBqYT_iwIvjDPEmCCRg_g0gZh-1n');
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>'৳'+Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:2});
+const qty=n=>Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:3});
+const sum=(a,f)=>a.reduce((s,x)=>s+Number(f(x)||0),0);
+let me=null,tab='dash',busy=false;
+
+const LOGO='<svg width="56" height="56" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#101114" stroke="#1769e0" stroke-width="2"/><path d="M27 8 14 27h8l-3 13 15-21h-9z" fill="#1769e0"/></svg>';
+const CIRCUIT='<svg class="c" viewBox="0 0 200 100" fill="none" stroke="#fff" stroke-width="1.5"><path d="M0 20h60l10 10h50M0 50h40l15 15h70l10-10h40M0 80h90l10-10h100"/><circle cx="120" cy="30" r="4"/><circle cx="125" cy="65" r="4"/><circle cx="100" cy="70" r="4"/></svg>';
+
+// Bangladesh day start (UTC+6, no DST) as ISO
+function dayStart(){const off=6*36e5,d=new Date(Date.now()+off);return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-off).toISOString()}
+// read all rows (Supabase returns max 1000 per request)
+async function all(mk){let out=[],from=0;for(;;){const{data,error}=await mk().range(from,from+999);if(error)throw error;out=out.concat(data);if(data.length<1000)return out;from+=1000}}
+
+function toast(m,e){const t=document.createElement('div');t.className='toast'+(e?' e':'');t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3200)}
+function theme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('theme',t)}catch(e){}}
+try{theme(localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))}catch(e){}
+
+/* ---------- LOGIN ---------- */
+function loginView(msg){
+  $('#app').innerHTML=`<div class="login"><div class="logo">${LOGO}<b>MANIK ELECTRIC &amp; ELECTRONICS SERVICE</b><small style="color:var(--mute)">ELECTRICAL &amp; ELECTRONICS SALES AND REPAIR</small></div>
+  ${msg?`<div class="err">${esc(msg)}</div>`:''}
+  <label>ইমেইল</label><input id="em" type="email" autocomplete="username" inputmode="email">
+  <label>পাসওয়ার্ড</label><input id="pw" type="password" autocomplete="current-password">
+  <button class="btn" id="go">লগইন করুন</button></div>`;
+  $('#go').onclick=async()=>{
+    if(busy)return;busy=true;const b=$('#go');b.disabled=true;b.textContent='অপেক্ষা করুন...';
+    const{data,error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
+    busy=false;
+    if(error)return loginView('লগইন হয়নি: ইমেইল বা পাসওয়ার্ড ঠিক নেই।');
+    afterLogin(data.user);
+  };
+}
+async function afterLogin(user){
+  const{data:p,error}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  if(error||!p||!p.is_active){await sb.auth.signOut();return loginView('আপনার অ্যাকাউন্ট এখনো চালু করা হয়নি। Owner-এর সাথে যোগাযোগ করুন।')}
+  me=p;shell();go('dash');
+}
+
+/* ---------- SHELL ---------- */
+function shell(){
+  $('#app').innerHTML=`<div class="top"><b>MANIK ELECTRIC &amp; ELECTRONICS</b>
+  <button class="ib" id="rf" title="রিফ্রেশ">⟳</button><button class="ib" id="th" title="Dark/Light">◐</button><button class="ib" id="lo" title="লগআউট">⏻</button></div>
+  <div class="banner">${CIRCUIT}${LOGO.replace('width="56" height="56"','width="44" height="44"')}<h1>MANIK ELECTRIC &amp; ELECTRONICS SERVICE</h1><p>Electrical &amp; Electronics Sales and Repair</p></div>
+  <main id="view"></main>
+  <nav><button data-t="dash"><span>▦</span>ড্যাশবোর্ড</button><button data-t="inv"><span>▤</span>পণ্য</button><button data-t="sales"><span>৳</span>বিক্রি</button><button data-t="svc"><span>✚</span>সার্ভিস</button></nav>`;
+  $('#rf').onclick=refresh;
+  $('#th').onclick=()=>theme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+  $('#lo').onclick=async()=>{await sb.auth.signOut();me=null;loginView()};
+  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
+}
+function go(t){tab=t;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));refresh()}
+async function refresh(){
+  const v=$('#view');v.innerHTML='<i class="spin"></i>';
+  try{
+    if(tab==='dash')await dash();else if(tab==='inv')await inv();
+    else v.innerHTML='<p class="note">এই অংশ পরের ধাপে তৈরি হবে। এখনো এটি চালু নয়।</p>';
+  }catch(e){v.innerHTML=`<div class="err">তথ্য আনা যায়নি: ${esc(e.message||e)}</div>`}
+}
+
+/* ---------- DASHBOARD (all numbers come from the database) ---------- */
+async function dash(){
+  const st=dayStart(),own=me.role==='owner';
+  const[today,dues,pdues,prods,cash]=await Promise.all([
+    all(()=>sb.from('sales').select('total,paid,due,cost_total').eq('status','active').gte('sale_date',st)),
+    all(()=>sb.from('sales').select('due').eq('status','active').gt('due',0)),
+    all(()=>sb.from('purchases').select('due').eq('status','active').gt('due',0)),
+    all(()=>sb.from('products').select('id,name,current_stock,min_stock,base_unit').eq('is_active',true)),
+    own?all(()=>sb.from('cash_transactions').select('direction,amount').eq('status','active').eq('method','cash')):Promise.resolve([])
+  ]);
+  const total=sum(today,s=>s.total),profit=sum(today,s=>s.total-s.cost_total);
+  const bal=sum(cash.filter(c=>c.direction==='in'),c=>c.amount)-sum(cash.filter(c=>c.direction==='out'),c=>c.amount);
+  const low=prods.filter(p=>Number(p.min_stock)>0&&Number(p.current_stock)<=Number(p.min_stock));
+  const card=(l,v,c='')=>`<div class="card"><small>${l}</small><strong class="${c}">${v}</strong></div>`;
+  $('#view').innerHTML=`<div class="grid">
+   <div class="card wide hero"><small>আজকের মোট বিক্রি</small><strong>${money(total)}</strong></div>
+   ${card('আজকের আনুমানিক লাভ',money(profit),profit<0?'bad':'good')}
+   ${card('আজকের বিক্রির সংখ্যা',qty(today.length))}
+   ${card('আজকের নগদ পাওয়া',money(sum(today,s=>s.paid)))}
+   ${card('আজকের বাকি বিক্রি',money(sum(today,s=>s.due)),'warn')}
+   ${card('মোট বাকি পাওনা',money(sum(dues,s=>s.due)))}
+   ${card('মোট বাকি দেনা',money(sum(pdues,s=>s.due)))}
+   ${card('মোট পণ্য',qty(prods.length))}
+   ${card('স্টকে আছে',qty(prods.filter(p=>Number(p.current_stock)>0).length))}
+   ${own?`<div class="card wide"><small>দোকানের বর্তমান নগদ ক্যাশ</small><strong>${money(bal)}</strong></div>`:''}
+  </div>
+  ${low.length?`<h2>⚠️ স্টক কমে গেছে</h2>`+low.map(p=>`<div class="card row" style="margin-bottom:8px"><span>${esc(p.name)}</span><span class="warn">${qty(p.current_stock)} ${esc(p.base_unit)} (সর্বনিম্ন ${qty(p.min_stock)})</span></div>`).join(''):''}
+  <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>`;
+}
+
+/* ---------- INVENTORY ---------- */
+async function inv(){
+  const prods=await all(()=>sb.from('products').select('*').eq('is_active',true).order('name'));
+  const own=me.role==='owner';
+  $('#view').innerHTML=`<div class="row" style="margin-bottom:10px"><input id="q" placeholder="পণ্য খুঁজুন (নাম, ব্র্যান্ড, কোড)" style="margin:0">${own?'<button class="btn sm" id="add">+ নতুন</button>':''}</div><div id="pl"></div>`;
+  const draw=()=>{const k=$('#q').value.trim().toLowerCase();
+    const f=prods.filter(p=>[p.name,p.brand,p.code,p.model_no].join(' ').toLowerCase().includes(k));
+    $('#pl').innerHTML=f.length?f.map(p=>`<div class="card" style="margin-bottom:8px"><div class="row"><b>${esc(p.name)}</b><span class="pill">${esc(p.base_unit)}</span></div>
+      <div class="row"><small style="color:var(--mute)">${esc([p.brand,p.model_no,p.code].filter(Boolean).join(' • '))}</small>
+      <span class="${Number(p.min_stock)>0&&Number(p.current_stock)<=Number(p.min_stock)?'warn':''}">স্টক: ${qty(p.current_stock)}</span></div>
+      <div class="row"><small>বিক্রয়মূল্য ${money(p.sale_price)}</small>${own?`<small>গড় ক্রয়মূল্য ${money(p.avg_cost)}</small>`:''}</div></div>`).join(''):'<p class="note">কোনো পণ্য নেই।'+(own?' উপরে "+ নতুন" চেপে প্রথম পণ্য যোগ করুন।':'')+'</p>'};
+  $('#q').oninput=draw;draw();
+  if(own)$('#add').onclick=addForm;
+}
+async function addForm(){
+  const[{data:cats},{data:units}]=await Promise.all([sb.from('categories').select('id,name').order('name'),sb.from('units').select('code,name_bn').order('code')]);
+  const s=document.createElement('div');s.className='sheet';
+  s.innerHTML=`<div><h2 style="margin-top:0">নতুন পণ্য</h2>
+  <label>পণ্যের নাম *</label><input id="n">
+  <label>Category</label><select id="c"><option value="">— নির্বাচন করুন —</option>${cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
+  <label>Brand</label><input id="b"><label>Model Number</label><input id="m"><label>Product Code</label><input id="k">
+  <label>Unit (স্টক এই ইউনিটে গোনা হবে) *</label><select id="u">${units.map(u=>`<option value="${u.code}">${u.code} (${esc(u.name_bn)})</option>`).join('')}</select>
+  <label>বিক্রয়মূল্য (৳) *</label><input id="p" type="number" inputmode="decimal" min="0" step="0.01">
+  <label>সর্বনিম্ন স্টক অ্যালার্ট</label><input id="ms" type="number" inputmode="decimal" min="0" step="0.001" value="0">
+  <label>বিবরণ</label><textarea id="d" rows="2"></textarea>
+  <p class="note">স্টক ও ক্রয়মূল্য এখানে দেওয়া হয় না। মাল কেনার (Purchase) অংশ থেকে যুক্ত হলে স্টক ও গড় ক্রয়মূল্য নিজে থেকে হিসাব হবে।</p>
+  <div class="row"><button class="btn ghost" id="x">বাতিল</button><button class="btn" id="sv">সংরক্ষণ করুন</button></div></div>`;
+  document.body.appendChild(s);
+  $('#x').onclick=()=>s.remove();
+  $('#sv').onclick=async()=>{
+    if(busy)return;
+    const name=$('#n').value.trim(),price=$('#p').value;
+    if(!name)return toast('পণ্যের নাম দিন',1);
+    if(price===''||Number(price)<0)return toast('বিক্রয়মূল্য দিন',1);
+    busy=true;const b=$('#sv');b.disabled=true;b.textContent='সংরক্ষণ হচ্ছে...';
+    const{error}=await sb.from('products').insert({name,category_id:$('#c').value||null,brand:$('#b').value.trim()||null,model_no:$('#m').value.trim()||null,code:$('#k').value.trim()||null,base_unit:$('#u').value,sale_price:Number(price),min_stock:Number($('#ms').value||0),description:$('#d').value.trim()||null,created_by:me.id});
+    busy=false;
+    if(error){b.disabled=false;b.textContent='সংরক্ষণ করুন';return toast(error.code==='23505'?'এই Product Code আগে থেকেই আছে':'সংরক্ষণ হয়নি: '+error.message,1)}
+    s.remove();toast('পণ্য সংরক্ষণ হয়েছে');refresh();
+  };
+}
+
+/* ---------- PULL TO REFRESH ---------- */
+let y0=null,pull=0;const ptr=$('#ptr');
+addEventListener('touchstart',e=>{y0=(scrollY<=0&&me&&!document.querySelector('.sheet'))?e.touches[0].clientY:null;pull=0},{passive:true});
+addEventListener('touchmove',e=>{if(y0==null)return;pull=e.touches[0].clientY-y0;if(pull>0)ptr.style.transform=`translateY(${Math.min(pull,110)}px)`},{passive:true});
+addEventListener('touchend',()=>{if(y0!=null&&pull>80){ptr.style.transform='translateY(70px)';refresh().finally(()=>ptr.style.transform='')}else ptr.style.transform='';y0=null});
+
+/* ---------- START ---------- */
+(async()=>{const{data:{session}}=await sb.auth.getSession();session?afterLogin(session.user):loginView()})();
+</script>
+</body>
+</html>
