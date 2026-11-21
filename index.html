@@ -72,6 +72,7 @@ const money=n=>'৳'+Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:
 const qty=n=>Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:3});
 const sum=(a,f)=>a.reduce((s,x)=>s+Number(f(x)||0),0);
 let me=null,tab='dash',busy=false,period='day';
+const BACKUP_DAYS=5;
 const PL={day:'আজকের',week:'এই সপ্তাহের',month:'এই মাসের',year:'এই বছরের'};
 
 const LOGO='<svg width="56" height="56" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#101114" stroke="#1769e0" stroke-width="2"/><path d="M27 8 14 27h8l-3 13 15-21h-9z" fill="#1769e0"/></svg>';
@@ -133,18 +134,20 @@ async function refresh(){
 /* ---------- DASHBOARD (all numbers come from the database) ---------- */
 async function dash(){
   const st=periodStart(period),own=me.role==='owner';
-  const[today,dues,pdues,prods,cash]=await Promise.all([
+  const[today,dues,pdues,prods,cash,cfg]=await Promise.all([
     all(()=>sb.from('sales').select('total,paid,due,cost_total').eq('status','active').gte('sale_date',st)),
     all(()=>sb.from('sales').select('due').eq('status','active').gt('due',0)),
     all(()=>sb.from('purchases').select('due').eq('status','active').gt('due',0)),
     all(()=>sb.from('products').select('id,name,current_stock,min_stock,base_unit').eq('is_active',true)),
-    all(()=>sb.from('cash_transactions').select('direction,amount').eq('status','active').eq('method','cash'))
+    all(()=>sb.from('cash_transactions').select('direction,amount').eq('status','active').eq('method','cash')),
+    own?sb.from('shop_settings').select('last_backup_at').eq('id',1).single():Promise.resolve({})
   ]);
+  const last=cfg?.data?.last_backup_at,days=last?Math.floor((Date.now()-new Date(last))/864e5):null,bdue=own&&(days===null||days>=BACKUP_DAYS),bmsg=days===null?'এখনো কোনো ব্যাকআপ নেওয়া হয়নি।':'শেষ ব্যাকআপ নেওয়া হয়েছে '+qty(days)+' দিন আগে।';
   const total=sum(today,s=>s.total),profit=sum(today,s=>s.total-s.cost_total);
   const bal=sum(cash.filter(c=>c.direction==='in'),c=>c.amount)-sum(cash.filter(c=>c.direction==='out'),c=>c.amount);
   const low=prods.filter(p=>Number(p.min_stock)>0&&Number(p.current_stock)<=Number(p.min_stock));
   const card=(l,v,c='')=>`<div class="card"><small>${l}</small><strong class="${c}">${v}</strong></div>`;
-  $('#view').innerHTML=`<div class="row" style="gap:6px;margin-bottom:10px">${[['day','আজ'],['week','সপ্তাহ'],['month','মাস'],['year','বছর']].map(([k,l])=>`<button class="btn ${k===period?'':'ghost'} sm" data-p="${k}" style="flex:1">${l}</button>`).join('')}</div><div class="grid">
+  $('#view').innerHTML=`${bdue?`<div class="card" style="border:2px solid var(--bad);background:#c6282818;margin-bottom:12px"><b class="bad" style="font-size:18px">⚠️ ব্যাকআপ নেওয়ার সময় হয়েছে!</b><p style="margin:6px 0">${bmsg} ডেটা হারিয়ে গেলে ফেরত পাওয়া কঠিন হবে।</p><button class="btn" id="bk2">⬇ এখনই ব্যাকআপ নিন</button></div>`:''}<div class="row" style="gap:6px;margin-bottom:10px">${[['day','আজ'],['week','সপ্তাহ'],['month','মাস'],['year','বছর']].map(([k,l])=>`<button class="btn ${k===period?'':'ghost'} sm" data-p="${k}" style="flex:1">${l}</button>`).join('')}</div><div class="grid">
    <div class="card wide hero"><small>${PL[period]} মোট বিক্রি</small><strong>${money(total)}</strong></div>
    ${card(PL[period]+' আনুমানিক লাভ',money(profit),profit<0?'bad':'good')}
    ${card(PL[period]+' বিক্রির সংখ্যা',qty(today.length))}
@@ -160,6 +163,7 @@ async function dash(){
   <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>${own?'<button class="btn ghost" id="bk">⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)</button><p class="note">ব্যাকআপে সব হিসাব থাকে, ছবির ফাইল থাকে না। সপ্তাহে অন্তত একবার ডাউনলোড করে iCloud বা Files-এ রাখুন।</p>':''}`;
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{period=b.dataset.p;refresh()});
   if(own)$('#bk').onclick=backup;
+  if(bdue){$('#bk2').onclick=backup;if(!window._bkShown){window._bkShown=1;popup(`<h2 class="bad">⚠️ ব্যাকআপ নেওয়ার সময় হয়েছে!</h2><p>${bmsg}<br>প্রতি ${qty(BACKUP_DAYS)} দিনে একবার ব্যাকআপ নিন, নইলে ডেটা হারালে ফেরত পাওয়া কঠিন হবে।</p><button class="btn" id="bk3" style="margin-bottom:10px">⬇ এখনই ব্যাকআপ নিন</button>`);$('#bk3').onclick=e=>{e.target.closest('.sheet').remove();backup({currentTarget:$('#bk')})}}}
 }
 
 /* ---------- INVENTORY ---------- */
@@ -222,11 +226,12 @@ async function viewer(type,id){
   draw()}
 
 /* ---------- BACKUP (Owner) ---------- */
-async function backup(){const b=$('#bk');b.disabled=true;b.textContent='ব্যাকআপ তৈরি হচ্ছে...';
+async function backup(ev){const b=ev?.currentTarget||$('#bk');b.disabled=true;b.textContent='ব্যাকআপ তৈরি হচ্ছে...';
   try{const T=['shop_settings','categories','units','products','product_unit_conversions','stock_movements','suppliers','customers','purchases','purchase_items','sales','sale_items','payments','cash_transactions','daily_closings','activity_logs','attachments','opening_stock_batches','profiles'],out={};
     for(const t of T)out[t]=await all(()=>sb.from(t).select('*'));
     const name='manik-backup-'+new Date(Date.now()+6*36e5).toISOString().slice(0,10)+'.json',url=URL.createObjectURL(new Blob([JSON.stringify({app:'manik-shop',exported_at:new Date().toISOString(),tables:out},null,1)],{type:'application/json'}));
-    popup(`<h2>✅ ব্যাকআপ প্রস্তুত</h2><p>নিচের বাটনে চেপে ফাইলটি Files অ্যাপে সংরক্ষণ করুন।</p><a class="btn" style="display:block;text-decoration:none;margin-bottom:10px" href="${url}" download="${name}">⬇ ফাইল সংরক্ষণ করুন</a>`);
+    popup(`<h2>✅ ব্যাকআপ প্রস্তুত</h2><p>নিচের বাটনে চেপে ফাইলটি Files অ্যাপে সংরক্ষণ করুন।</p><a class="btn" style="display:block;text-decoration:none;margin-bottom:10px" href="${url}" download="${name}" id="bkl">⬇ ফাইল সংরক্ষণ করুন</a>`);
+    $('#bkl').onclick=()=>{sb.from('shop_settings').update({last_backup_at:new Date().toISOString()}).eq('id',1).then(()=>{})};
   }catch(e){toast('ব্যাকআপ হয়নি: '+(e.message||e),1);b.disabled=false;b.textContent='⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)'}}
 
 /* ---------- PURCHASE (kind 'buy') AND SALE (kind 'sale') ---------- */
