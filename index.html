@@ -161,9 +161,9 @@ async function dash(){
    <div class="card wide"><small>দোকানের বর্তমান নগদ ক্যাশ</small><strong>${money(bal)}</strong></div>
   </div>
   ${low.length?`<h2>⚠️ স্টক কমে গেছে</h2>`+low.map(p=>`<div class="card row" style="margin-bottom:8px"><span>${esc(p.name)}</span><span class="warn">${qty(p.current_stock)} ${esc(p.base_unit)} (সর্বনিম্ন ${qty(p.min_stock)})</span></div>`).join(''):''}
-  <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>${own?'<button class="btn ghost" id="bk">⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)</button><p class="note">ব্যাকআপে সব হিসাব ও সব ছবি থাকে (ছবি আলাদা ZIP ফাইলে)। সপ্তাহে অন্তত একবার ডাউনলোড করে iCloud বা Files-এ রাখুন।</p><h2 class="bad">⚠️ ঝুঁকিপূর্ণ কাজ (শুধু Owner)</h2><button class="btn ghost" id="rz" style="color:var(--bad)">টেস্ট ডেটা মুছে সব শূন্য করুন</button>':''}`;
+  <p class="note">আজকের খরচ ও সার্ভিসিং আয় এখনো যুক্ত হয়নি (পরের ধাপে আসবে)। লাভের হিসাব এখন শুধু পণ্য বিক্রি থেকে।</p>${own?'<button class="btn ghost" id="bk">⬇ ব্যাকআপ ডাউনলোড (শুধু Owner)</button><p class="note">ব্যাকআপে সব হিসাব ও সব ছবি থাকে (ছবি আলাদা ZIP ফাইলে)। সপ্তাহে অন্তত একবার ডাউনলোড করে iCloud বা Files-এ রাখুন।</p>':''}`;
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{period=b.dataset.p;refresh()});
-  if(own){$('#bk').onclick=backup;$('#rz').onclick=resetAll}
+  if(own)$('#bk').onclick=backup;
   if(bdue){$('#bk2').onclick=backup;if(!window._bkShown){window._bkShown=1;popup(`<h2 class="bad">⚠️ ব্যাকআপ নেওয়ার সময় হয়েছে!</h2><p>${bmsg}<br>প্রতি ${qty(BACKUP_DAYS)} দিনে একবার ব্যাকআপ নিন, নইলে ডেটা হারালে ফেরত পাওয়া কঠিন হবে।</p><button class="btn" id="bk3" style="margin-bottom:10px">⬇ এখনই ব্যাকআপ নিন</button>`);$('#bk3').onclick=e=>{e.target.closest('.sheet').remove();backup({currentTarget:$('#bk')})}}}
 }
 
@@ -225,16 +225,6 @@ async function viewer(type,id){
     $('#vx').onclick=()=>s.remove();
     $('#vu').onclick=async()=>{const f=[...$('#vf').files].slice(0,15-n);if(!f.length)return toast('ছবি বেছে নিন (সর্বোচ্চ ১৫টি)',1);$('#vu').disabled=true;await upload(type,id,f);draw()}};
   draw()}
-
-/* ---------- RESET ALL DATA (Owner, irreversible) ---------- */
-async function resetAll(){
-  if(!confirm('⚠️ সব বিক্রি, ক্রয়, পেমেন্ট, ক্যাশ ও মেমোর ছবি চিরতরে মুছে যাবে এবং ড্যাশবোর্ড শূন্য হয়ে যাবে। এটি আর ফেরানো যাবে না।\n\nগত ২৪ ঘণ্টার মধ্যে ব্যাকআপ নেওয়া থাকতে হবে। এগিয়ে যাবেন?'))return;
-  const master=confirm('পণ্য, কাস্টমার ও Supplier-এর তালিকাও কি মুছবেন?\n\nOK = সবকিছু মুছুন (একদম ফাঁকা)\nCancel = তালিকা থাকুক, শুধু স্টক ও হিসাব শূন্য হবে');
-  if(prompt('নিশ্চিত করতে ইংরেজিতে লিখুন: RESET')!=='RESET')return toast('বাতিল করা হয়েছে',1);
-  const r=await sb.rpc('reset_all_data',{p_confirm:'RESET',p_include_master:master});
-  if(r.error)return toast(r.error.message,1);
-  const paths=r.data||[];for(let i=0;i<paths.length;i+=100)await sb.storage.from('shop-files').remove(paths.slice(i,i+100));
-  toast('সব হিসাব শূন্য করা হয়েছে');refresh()}
 
 /* ---------- BACKUP (Owner) ---------- */
 async function backup(ev){
@@ -313,13 +303,14 @@ async function txn(kind){
         popup(pr>=0?`<h2>🎉 অভিনন্দন!</h2><p>আপনার বিক্রি সফলভাবে সম্পন্ন হয়েছে।</p><p>মোট বিক্রি: <b>${money(t)}</b><br>আনুমানিক লাভ: <b class="good">${money(pr)}</b><br>নগদ পেয়েছেন: ${money(paid)} · বাকি: ${money(t-paid)}</p><p class="note">Invoice: ${esc(s?.invoice_no)}</p>`
           :`<h2>⚠️ লোকসান হয়েছে</h2><p>এই বিক্রিতে লোকসান: <b class="bad">${money(-pr)}</b></p><p class="note">চিন্তা করবেন না, সঠিক হিসাব রাখুন এবং পরের সিদ্ধান্ত আরও ভালোভাবে নিন।</p>`)}
     }catch(er){b.disabled=false;b.textContent=lbl;toast(er.message||String(er),1)}finally{busy=false}};
-  if(op){const[{data:bs},{data:mv}]=await Promise.all([sb.from('opening_stock_batches').select('request_id,created_at').order('created_at',{ascending:false}).limit(30),sb.from('stock_movements').select('ref_id,products(name)').eq('ref_type','opening_stock').limit(1000)]);
-    $('#rc').innerHTML='<h2>আগের মজুদের তালিকা</h2>'+((bs||[]).map(b=>`<div class="card row" style="margin-bottom:8px"><span>${fd(b.created_at)}<br><small>${esc((mv||[]).filter(m=>m.ref_id===b.request_id).map(m=>m.products?.name).filter(Boolean).join(', '))}</small></span><button class="btn ghost sm" data-ph="${b.request_id}">📎 ছবি</button></div>`).join('')||'<p class="note">এখনো কিছু নেই।</p>');
-    $('#rc').onclick=e=>{if(e.target.dataset?.ph)viewer('opening_stock',e.target.dataset.ph)};return}
-  const{data:rec}=await sb.from(buy?'purchases':'sales').select(buy?'id,total,due,created_at,suppliers(name),purchase_items(products(name))':'id,invoice_no,total,due,status,created_at').order('created_at',{ascending:false}).limit(buy?50:15);
-  $('#rc').innerHTML=`<h2>সাম্প্রতিক ${buy?'ক্রয়':'বিক্রি'}</h2>${buy?'<input id="rs" placeholder="পণ্য বা Supplier দিয়ে খুঁজুন">':''}`+((rec||[]).map(r=>`<div class="card row" style="margin-bottom:8px"><span>${buy?'':esc(r.invoice_no)+' • '}${fd(r.created_at)}${r.status==='void'?' <b class="bad">(বাতিল)</b>':''}${buy?`<br><small>${esc(r.suppliers?.name||'Supplier নেই')}: ${esc((r.purchase_items||[]).map(i=>i.products?.name).filter(Boolean).join(', '))}</small>`:''}</span><span>${money(r.total)}${Number(r.due)>0?` <small class="warn">বাকি ${money(r.due)}</small>`:''}${buy?` <button class="btn ghost sm" data-ph="${r.id}">📎 ছবি</button>`:''}${!buy&&r.status!=='void'?` <button class="btn ghost sm" data-v="${r.id}">বাতিল</button>`:''}</span></div>`).join('')||'<p class="note">এখনো কিছু নেই।</p>');
+  if(op){const[{data:bs},{data:mv}]=await Promise.all([sb.from('opening_stock_batches').select('request_id,created_at,voided_at').order('created_at',{ascending:false}).limit(30),sb.from('stock_movements').select('ref_id,products(name)').eq('ref_type','opening_stock').limit(1000)]);
+    $('#rc').innerHTML='<h2>আগের মজুদের তালিকা</h2>'+((bs||[]).map(b=>`<div class="card row" style="margin-bottom:8px"><span>${fd(b.created_at)}<br><small>${esc((mv||[]).filter(m=>m.ref_id===b.request_id).map(m=>m.products?.name).filter(Boolean).join(', '))}</small></span><span>${b.voided_at?'<b class="bad">(বাতিল)</b> ':`<button class="btn ghost sm" data-vo="${b.request_id}">বাতিল</button> `}<button class="btn ghost sm" data-ph="${b.request_id}">📎 ছবি</button></span></div>`).join('')||'<p class="note">এখনো কিছু নেই।</p>');
+    $('#rc').onclick=async e=>{if(e.target.dataset?.ph)return viewer('opening_stock',e.target.dataset.ph);const vo=e.target.dataset?.vo;if(!vo||!confirm('এই মজুদ তোলা বাতিল করবেন? স্টক কমে যাবে।'))return;const q=await sb.rpc('void_opening_stock',{p_request_id:vo,p_reason:'বাতিল করা হয়েছে'});q.error?toast(q.error.message,1):(toast('মজুদ বাতিল হয়েছে'),refresh())};return}
+  const{data:rec}=await sb.from(buy?'purchases':'sales').select(buy?'id,total,due,status,created_at,suppliers(name),purchase_items(products(name))':'id,invoice_no,total,due,status,created_at').order('created_at',{ascending:false}).limit(buy?50:15);
+  $('#rc').innerHTML=`<h2>সাম্প্রতিক ${buy?'ক্রয়':'বিক্রি'}</h2>${buy?'<input id="rs" placeholder="পণ্য বা Supplier দিয়ে খুঁজুন">':''}`+((rec||[]).map(r=>`<div class="card row" style="margin-bottom:8px"><span>${buy?'':esc(r.invoice_no)+' • '}${fd(r.created_at)}${r.status==='void'?' <b class="bad">(বাতিল)</b>':''}${buy?`<br><small>${esc(r.suppliers?.name||'Supplier নেই')}: ${esc((r.purchase_items||[]).map(i=>i.products?.name).filter(Boolean).join(', '))}</small>`:''}</span><span>${money(r.total)}${Number(r.due)>0?` <small class="warn">বাকি ${money(r.due)}</small>`:''}${buy?` <button class="btn ghost sm" data-ph="${r.id}">📎 ছবি</button>`:''}${r.status!=='void'?` <button class="btn ghost sm" ${buy?'data-vp':'data-v'}="${r.id}">বাতিল</button>`:''}</span></div>`).join('')||'<p class="note">এখনো কিছু নেই।</p>');
   if(buy)$('#rs').oninput=()=>{const k=$('#rs').value.trim().toLowerCase();[...$('#rc').querySelectorAll('.card')].forEach(c=>c.hidden=!c.textContent.toLowerCase().includes(k))};
-  $('#rc').onclick=async e=>{if(e.target.dataset?.ph)return viewer('purchase',e.target.dataset.ph);const id=e.target.dataset?.v;if(!id||!confirm('এই বিক্রি বাতিল করবেন? স্টক ফেরত আসবে এবং নগদ টাকা ফেরত হিসেবে লেখা হবে।'))return;
+  $('#rc').onclick=async e=>{if(e.target.dataset?.ph)return viewer('purchase',e.target.dataset.ph);const vp=e.target.dataset?.vp;if(vp){if(!confirm('এই ক্রয় বাতিল করবেন? স্টক কমবে এবং নগদ টাকা ফেরত হিসেবে লেখা হবে।'))return;const q=await sb.rpc('void_purchase',{p_purchase_id:vp,p_reason:'বাতিল করা হয়েছে'});return q.error?toast(q.error.message,1):(toast('ক্রয় বাতিল হয়েছে'),refresh())}
+    const id=e.target.dataset?.v;if(!id||!confirm('এই বিক্রি বাতিল করবেন? স্টক ফেরত আসবে এবং নগদ টাকা ফেরত হিসেবে লেখা হবে।'))return;
     const r=await sb.rpc('void_sale',{p_sale_id:id,p_reason:'বাতিল করা হয়েছে'});r.error?toast(r.error.message,1):(toast('বিক্রি বাতিল হয়েছে'),refresh())};
 }
 
